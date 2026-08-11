@@ -473,8 +473,8 @@ export function Chat({
         <button
           type="submit"
           disabled={busy || !input.trim()}
-          className="revibe-label revibe-focus rounded-[var(--revibe-radius)] px-4 py-3 text-[12px] transition-opacity disabled:opacity-40"
-          style={{ background: "var(--revibe-ink)", color: "#fff" }}
+          className="revibe-label revibe-focus rounded-[var(--revibe-radius)] px-5 py-3 text-[12px] font-bold tracking-wider transition-all hover:opacity-90 active:scale-95 disabled:opacity-40"
+          style={{ background: "var(--revibe-gradient)", color: "#fff" }}
         >
           {busy ? "Asking…" : "Ask"}
         </button>

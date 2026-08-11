@@ -239,8 +239,8 @@ export function TeachChat() {
         <button
           type="submit"
           disabled={streaming || !input.trim()}
-          className="revibe-label revibe-focus rounded-[var(--revibe-radius)] px-5 py-2.5 text-[12px] transition-opacity disabled:opacity-40"
-          style={{ background: "var(--revibe-ink)", color: "#fff" }}
+          className="revibe-label revibe-focus rounded-[var(--revibe-radius)] px-5 py-2.5 text-[12px] font-bold tracking-wider transition-all hover:opacity-90 active:scale-95 disabled:opacity-40"
+          style={{ background: "var(--revibe-gradient)", color: "#fff" }}
         >
           {streaming ? "…" : "Send"}
         </button>
