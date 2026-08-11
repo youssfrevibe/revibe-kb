@@ -28,10 +28,11 @@ const PATTERNS: Pattern[] = [
   // United Arab Emirates
   { market: "uae", regex: /\b(united arab emirates|emirates|u\.?a\.?e\.?|dubai|abu dhabi|sharjah|ajman|fujairah)\b/i },
 
-  // Saudi Arabia — accept the country name, KSA code, city names, and the
+  // Saudi Arabia — "SA" is EXCLUSIVELY Saudi Arabia, never South Africa.
+  // Accept the country name, KSA code, SA code, city names, and the
   // "SA-" order prefix. Naked "saudi" is enough on its own.
   { market: "ksa", regex: /\b(saudi arabia|saudi|k\.?s\.?a\.?|riyadh|jeddah|dammam|mecca|makkah|madinah)\b/i },
-  { market: "ksa", regex: /\bSA\b/ }, // case-sensitive naked code
+  { market: "ksa", regex: /\bSA\b/ }, // case-sensitive — SA = Saudi Arabia, NEVER South Africa
 
   // Philippines — "PH" as an all-caps code only (avoids "pH" chemistry
   // false-positives, which are unlikely in this domain but cheap to guard
@@ -46,12 +47,13 @@ const PATTERNS: Pattern[] = [
   // things like "th" fragments in the middle of a sentence.
   { market: "th", regex: /\b(thailand|thai|bangkok|phuket|chiang mai|pattaya|TH)\b/ },
 
-  // South Africa — "South Africa" plus the ZA code and major cities.
+  // South Africa — detected ONLY via "ZA", the full country name, or city
+  // names. "SA" is NEVER South Africa (it belongs to Saudi Arabia above).
   {
     market: "za",
     regex: /\b(south africa|south african|cape town|johannesburg|joburg|durban|pretoria|z\.?a\.?)\b/i,
   },
-  { market: "za", regex: /\bZA\b/ }, // case-sensitive naked code
+  { market: "za", regex: /\bZA\b/ }, // case-sensitive — ZA only, never SA
 ];
 
 // Order-number prefixes documented in the Alhena guidelines (SA-, PH-, HK-,

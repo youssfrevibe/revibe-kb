@@ -78,6 +78,11 @@ export function systemPrompt(detectedMarkets: Market[], currentDate?: string): s
     "7. Do not write a sources or references list at the end. The interface",
     "   shows sources under your answer automatically. No bracketed citation",
     "   markers either.",
+    "8. Market code clarification: \"SA\" ALWAYS means Saudi Arabia (KSA), NEVER",
+    "   South Africa. South Africa's code is \"ZA\". If someone says \"SA order\"",
+    "   or \"SA policy\", they are asking about Saudi Arabia. Only use South",
+    "   Africa data when the user explicitly says \"South Africa\", \"ZA\", or",
+    "   mentions a South African city (Cape Town, Johannesburg, Durban, etc.).",
   ].join("\n");
 }
 
