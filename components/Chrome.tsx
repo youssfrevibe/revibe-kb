@@ -6,7 +6,8 @@ import { usePathname, useSearchParams } from "next/navigation";
 
 const NAV = [
   { href: "/ask", label: "Ask" },
-  { href: "/threads", label: "Threads" },
+  { href: "/threads", label: "Previous Chats" },
+  { href: "/sources", label: "Sources" },
 ];
 
 /**

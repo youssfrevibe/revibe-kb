@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { marketLabel } from "@/lib/markets";
 
 type DocumentRow = {
@@ -126,40 +127,47 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes }:
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex border-b" style={{ borderColor: "var(--revibe-border)" }}>
-        <button
-          type="button"
-          onClick={() => setActiveTab("catalog")}
-          className="revibe-label border-b-2 px-4 py-2.5 text-[11px] font-semibold transition-colors"
-          style={{
-            borderColor: activeTab === "catalog" ? "var(--revibe-accent)" : "transparent",
-            color: activeTab === "catalog" ? "var(--revibe-ink)" : "var(--revibe-ink-muted)",
-          }}
+      <div className="flex items-center justify-between border-b" style={{ borderColor: "var(--revibe-border)" }}>
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab("catalog")}
+            className={`revibe-label px-4 py-2.5 text-[12px] border-b-2 transition-colors ${
+              activeTab === "catalog"
+                ? "border-[var(--revibe-ink)] font-semibold text-[var(--revibe-ink)]"
+                : "border-transparent text-[var(--revibe-ink-muted)] hover:text-[var(--revibe-ink)]"
+            }`}
+          >
+            Source Catalog ({documents.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("learning")}
+            className={`revibe-label px-4 py-2.5 text-[12px] border-b-2 transition-colors ${
+              activeTab === "learning"
+                ? "border-[var(--revibe-ink)] font-semibold text-[var(--revibe-ink)]"
+                : "border-transparent text-[var(--revibe-ink-muted)] hover:text-[var(--revibe-ink)]"
+            }`}
+          >
+            AI Learning Log ({feedbackLogs.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("requests")}
+            className={`revibe-label px-4 py-2.5 text-[12px] border-b-2 transition-colors ${
+              activeTab === "requests"
+                ? "border-[var(--revibe-ink)] font-semibold text-[var(--revibe-ink)]"
+                : "border-transparent text-[var(--revibe-ink-muted)] hover:text-[var(--revibe-ink)]"
+            }`}
+          >
+            Request Analysis ({threads.length})
+          </button>
+        </div>
+
+        <Link
+          href="/admin/teach"
+          className="revibe-label revibe-focus mb-1.5 rounded-[var(--revibe-radius)] px-3 py-1.5 text-[11px] font-semibold transition-colors"
+          style={{ background: "var(--revibe-ink)", color: "#fff" }}
         >
-          Source Catalog
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("learning")}
-          className="revibe-label border-b-2 px-4 py-2.5 text-[11px] font-semibold transition-colors"
-          style={{
-            borderColor: activeTab === "learning" ? "var(--revibe-accent)" : "transparent",
-            color: activeTab === "learning" ? "var(--revibe-ink)" : "var(--revibe-ink-muted)",
-          }}
-        >
-          AI Learning Log
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("requests")}
-          className="revibe-label border-b-2 px-4 py-2.5 text-[11px] font-semibold transition-colors"
-          style={{
-            borderColor: activeTab === "requests" ? "var(--revibe-accent)" : "transparent",
-            color: activeTab === "requests" ? "var(--revibe-ink)" : "var(--revibe-ink-muted)",
-          }}
-        >
-          Request Analysis
-        </button>
+          Teach the AI &rarr;
+        </Link>
       </div>
 
       {/* Tab Contents */}

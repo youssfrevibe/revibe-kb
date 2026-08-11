@@ -11,3 +11,6 @@ next-env.d.ts
 sources/*
 !sources/.gitkeep
 !sources/README.md
+
+.vercel
+.env*
