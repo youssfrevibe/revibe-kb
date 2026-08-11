@@ -22,7 +22,7 @@
   --revibe-border-input: #c7c7c7; /* --form-input-border */
 
   --revibe-accent: #ff8b21;       /* warm brand accent */
-  --revibe-gradient: linear-gradient(135deg, #ff8b21 0%, #e95144 100%); /* revibe.me brand gradient */
+  --revibe-gradient: linear-gradient(135deg, #5d00b9 0%, #c61e8e 100%); /* revibe.me purple-to-magenta gradient */
   --revibe-alert: #e95144;        /* --sale-badge-bg */
   --revibe-error: #d93333;
   --revibe-error-bg: #fceeee;
