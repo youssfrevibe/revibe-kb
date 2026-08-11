@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Youssf/Documents/**)",
+      "Read(//c/Users/Youssf/Downloads/**)"
+    ]
+  }
+}

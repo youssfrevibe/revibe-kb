@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+.env.local
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+
+# Source material is company IP — kept out of git deliberately.
+# Remove this block if you decide the repo is the right home for it.
+sources/*
+!sources/.gitkeep
+!sources/README.md

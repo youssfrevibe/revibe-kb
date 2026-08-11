@@ -1,0 +1,45 @@
+{
+  "name": "revibe-knowledge-base",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "ingest": "tsx scripts/ingest.ts",
+    "query": "tsx scripts/query.ts",
+    "eval": "tsx scripts/eval.ts",
+    "seed:threads": "tsx scripts/seed-threads.ts",
+    "seed:references": "tsx scripts/seed-references.ts",
+    "scrape:help": "tsx scripts/scrape-help-center.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^1.5.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "next": "^16.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "comments": {
+    "overrides": "unpdf optionally depends on canvas (for rendering PDFs to images, which we never do) which pulls @mapbox/node-pre-gyp -> tar@6. tar@6 carries critical advisories. We cannot omit optional deps wholesale because Next's SWC platform binaries are optional too, so tar is pinned forward instead. If canvas's native build fails as a result, nothing is lost — it is an optional dep we do not use."
+  },
+  "overrides": {
+    "tar": "^7.5.21"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.7",
+    "firebase-tools": "^15.26.0",
+    "mammoth": "^1.8.0",
+    "postcss": "^8.5.22",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "unpdf": "^0.12.1",
+    "vercel": "^58.9.1"
+  }
+}

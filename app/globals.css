@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Revibe brand tokens.
+ *
+ * Values below were read from the live revibe.me stylesheet so this app matches
+ * the storefront and, later, revibe.training.hub. Change brand here and nowhere
+ * else — every component references these variables.
+ *
+ * The storefront is light-only, so this app is too. Adding a dark theme would
+ * make the embedded iframe disagree with the hub around it.
+ */
+:root {
+  --revibe-ink: #232323;          /* --color-text / --color-global / --btn-1-bg */
+  --revibe-ink-muted: #969696;    /* --color-text2 */
+  --revibe-ink-faint: #868686;    /* --color-grey, form placeholders */
+  --revibe-canvas: #f9f9f9;       /* --bg-global */
+  --revibe-surface: #ffffff;
+  --revibe-border: #e6e6e6;       /* --border-global */
+  --revibe-border-input: #c7c7c7; /* --form-input-border */
+
+  --revibe-accent: #ff8b21;       /* warm brand accent */
+  --revibe-alert: #e95144;        /* --sale-badge-bg */
+  --revibe-error: #d93333;
+  --revibe-error-bg: #fceeee;
+  --revibe-info-bg: #fff2dd;
+
+  --revibe-radius: 8px;           /* --btn-1-border-radius */
+  --revibe-tracking: 0.05em;      /* --heading-letter-spacing */
+}
+
+html,
+body {
+  background: var(--revibe-canvas);
+  color: var(--revibe-ink);
+}
+
+body {
+  font-size: 14px;
+  line-height: 28px;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Uppercase, wide-tracked headings are the storefront's strongest type signal. */
+.revibe-label {
+  text-transform: uppercase;
+  letter-spacing: var(--revibe-tracking);
+  font-weight: 600;
+}
+
+.revibe-focus:focus-visible {
+  outline: 2px solid var(--revibe-ink);
+  outline-offset: 2px;
+}
+
+/* Answer body. Markdown is not rendered to HTML — the model's output is shown as
+ * text with preserved line breaks, so there is no path for generated markup to
+ * become live DOM. */
+.answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
