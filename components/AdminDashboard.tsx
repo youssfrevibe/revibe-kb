@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { marketLabel } from "@/lib/markets";
+import { FeedbackReviewList } from "./FeedbackReviewList";
 
 type DocumentRow = {
   title: string;
@@ -38,10 +39,11 @@ type Props = {
   feedbackLogs: FeedbackRow[];
   threads: ThreadRow[];
   totalVotes: { good: number; bad: number };
+  initialTab?: string;
 };
 
-export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes }: Props) {
-  const [activeTab, setActiveTab] = useState<"catalog" | "learning" | "requests">("catalog");
+export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, initialTab = "catalog" }: Props) {
+  const [activeTab, setActiveTab] = useState<"catalog" | "learning" | "requests" | "feedback" | string>(initialTab);
 
   // Calculate tag counts
   const tagCounts: Record<string, number> = {};
@@ -128,7 +130,7 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes }:
 
       {/* Tabs Navigation */}
       <div className="flex items-center justify-between border-b" style={{ borderColor: "var(--revibe-border)" }}>
-        <div className="flex">
+        <div className="flex flex-wrap">
           <button
             onClick={() => setActiveTab("catalog")}
             className={`revibe-label px-4 py-2.5 text-[12px] border-b-2 transition-colors ${
@@ -138,6 +140,16 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes }:
             }`}
           >
             Source Catalog ({documents.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("feedback")}
+            className={`revibe-label px-4 py-2.5 text-[12px] border-b-2 transition-colors ${
+              activeTab === "feedback"
+                ? "border-[var(--revibe-ink)] font-semibold text-[var(--revibe-ink)]"
+                : "border-transparent text-[var(--revibe-ink-muted)] hover:text-[var(--revibe-ink)]"
+            }`}
+          >
+            Feedback Queue
           </button>
           <button
             onClick={() => setActiveTab("learning")}
@@ -161,7 +173,7 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes }:
           </button>
         </div>
 
-        <div className="flex gap-2 mb-1.5">
+        <div className="flex gap-2 mb-1.5 flex-wrap">
           <Link
             href="/admin/users"
             className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-gray-50"
@@ -436,6 +448,18 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes }:
               )}
             </div>
           </div>
+        </div>
+      )}
+      {activeTab === "feedback" && (
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="revibe-label text-[12px]">Feedback Review Queue</h2>
+            <p className="mt-1 text-[11px]" style={{ color: "var(--revibe-ink-muted)" }}>
+              Corrections submitted by agents. Approve to teach the agent&apos;s version, Correct to rewrite
+              it first, or Invalid to reject.
+            </p>
+          </div>
+          <FeedbackReviewList />
         </div>
       )}
     </div>

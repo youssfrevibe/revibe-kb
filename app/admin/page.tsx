@@ -29,7 +29,14 @@ type DBThread = {
   slug: string;
 };
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const params = await searchParams;
+  const initialTab = params.tab || "catalog";
+
   // Role gate: admin + owner only. Members hitting this URL (from a stale
   // link or a bookmark) get sent back to /ask rather than a raw 403.
   const user = await currentUser();
@@ -159,6 +166,7 @@ export default async function AdminPage() {
       feedbackLogs={feedbackLogs}
       threads={threads}
       totalVotes={totalVotes}
+      initialTab={initialTab}
     />
   );
 }
