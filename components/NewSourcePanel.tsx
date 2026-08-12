@@ -223,7 +223,7 @@ export function NewSourcePanel() {
                       >
                         {marketShort}
                       </span>
-                      <span className="text-[10px]" style={{ color: "var(--revibe-ink-faint)" }}>
+                      <span className="text-[10px]" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                         {new Date(entry.created_at).toLocaleDateString()}
                       </span>
                     </div>

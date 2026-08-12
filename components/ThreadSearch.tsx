@@ -125,7 +125,7 @@ export function ThreadSearch() {
                   </p>
                 ) : null}
 
-                <p className="mt-1.5 text-[11px]" style={{ color: "var(--revibe-ink-faint)" }}>
+                <p className="mt-1.5 text-[11px]" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                   {hit.messageCount} message{hit.messageCount === 1 ? "" : "s"} ·{" "}
                   {new Date(hit.updatedAt).toLocaleDateString()}
                 </p>

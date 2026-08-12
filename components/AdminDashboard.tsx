@@ -335,7 +335,7 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
                     <td className="border-b py-2 pr-3 text-right align-top tabular-nums" style={{ borderColor: "var(--revibe-border)" }}>
                       {doc.chunkCount}
                     </td>
-                    <td className="border-b py-2 text-right align-top" style={{ borderColor: "var(--revibe-border)" }}>
+                    <td className="border-b py-2 text-right align-top" style={{ borderColor: "var(--revibe-border)" }} suppressHydrationWarning>
                       {new Date(doc.updatedAt).toLocaleDateString()}
                     </td>
                   </tr>
@@ -395,7 +395,7 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
                         Market: {log.market.toUpperCase()}
                       </span>
                     </div>
-                    <span className="text-[10px]" style={{ color: "var(--revibe-ink-faint)" }}>
+                    <span className="text-[10px]" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                       {new Date(log.createdAt).toLocaleString()} ·{" "}
                       <a href={`/t/${log.threadSlug}`} className="underline font-medium hover:text-[var(--revibe-accent)]">
                         View Thread
@@ -539,7 +539,7 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
                               )}
                             </div>
                           </td>
-                          <td className="border-b py-2 text-right align-middle" style={{ color: "var(--revibe-ink-faint)" }}>
+                          <td className="border-b py-2 text-right align-middle" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                             {new Date(t.updatedAt).toLocaleDateString()}
                           </td>
                         </tr>

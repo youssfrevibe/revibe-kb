@@ -167,7 +167,7 @@ export function FeedbackReviewList() {
                     {marketShort}
                   </span>
                   <span className="flex-1 text-[13px] font-semibold">{review.question}</span>
-                  <span className="text-[10px]" style={{ color: "var(--revibe-ink-faint)" }}>
+                  <span className="text-[10px]" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                     {new Date(review.created_at).toLocaleString()}
                   </span>
                 </div>

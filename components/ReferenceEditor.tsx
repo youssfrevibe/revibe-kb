@@ -105,7 +105,7 @@ export function ReferenceEditor({
           {marketShort}
         </span>
         {savedAt ? (
-          <span className="ml-auto text-[10px]" style={{ color: "var(--revibe-ink-faint)" }}>
+          <span className="ml-auto text-[10px]" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
             Edited {new Date(savedAt).toLocaleString()}
           </span>
         ) : null}

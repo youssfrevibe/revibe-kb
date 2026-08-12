@@ -146,7 +146,7 @@ export function SourcesBrowser({ sources }: { sources: Source[] }) {
                   </p>
                 ) : null}
 
-                <p className="mt-1.5 text-[11px]" style={{ color: "var(--revibe-ink-faint)" }}>
+                <p className="mt-1.5 text-[11px]" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                   {new Date(source.updatedAt).toLocaleDateString()}
                 </p>
               </Link>

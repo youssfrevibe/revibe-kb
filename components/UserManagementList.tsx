@@ -176,10 +176,10 @@ export function UserManagementList() {
                         {user.role}
                       </span>
                     </td>
-                    <td className="border-b py-2 pr-3 align-top text-[10px]" style={{ borderColor: "var(--revibe-border)", color: "var(--revibe-ink-faint)" }}>
+                    <td className="border-b py-2 pr-3 align-top text-[10px]" style={{ borderColor: "var(--revibe-border)", color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                       {user.lastSignInAt ? new Date(user.lastSignInAt).toLocaleString() : "—"}
                     </td>
-                    <td className="border-b py-2 pr-3 align-top text-[10px]" style={{ borderColor: "var(--revibe-border)", color: "var(--revibe-ink-faint)" }}>
+                    <td className="border-b py-2 pr-3 align-top text-[10px]" style={{ borderColor: "var(--revibe-border)", color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                       {user.lastActiveAt ? new Date(user.lastActiveAt).toLocaleString() : "—"}
                     </td>
                     <td className="border-b py-2 align-top" style={{ borderColor: "var(--revibe-border)" }}>
@@ -251,7 +251,7 @@ export function UserManagementList() {
                                       Market: {t.market}
                                     </span>
                                   </div>
-                                  <span className="text-[9px] whitespace-nowrap" style={{ color: "var(--revibe-ink-faint)" }}>
+                                  <span className="text-[9px] whitespace-nowrap" style={{ color: "var(--revibe-ink-faint)" }} suppressHydrationWarning>
                                     {new Date(t.updatedAt).toLocaleDateString()}
                                   </span>
                                 </div>
