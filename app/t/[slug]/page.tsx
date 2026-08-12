@@ -5,6 +5,7 @@ import { ReferenceEditor } from "@/components/ReferenceEditor";
 import type { Source } from "@/components/SourcesBlock";
 import { missingEnv, configErrorMessage } from "@/lib/config";
 import type { SourceTag } from "@/lib/source-tags";
+import { currentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,10 @@ export default async function ThreadPage({ params }: { params: Promise<{ slug: s
 
     if (!refMessage) notFound();
 
+    // Server-side viewer role — client hides Edit for members, server rejects.
+    const viewer = await currentUser();
+    const canEdit = viewer?.role === "admin" || viewer?.role === "owner";
+
     return (
       <ReferenceEditor
         threadSlug={thread.slug as string}
@@ -61,6 +66,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ slug: s
         refNumber={thread.ref_number as number | null}
         market={thread.market as string}
         editedAt={refMessage.edited_at as string | null}
+        canEdit={canEdit}
       />
     );
   }

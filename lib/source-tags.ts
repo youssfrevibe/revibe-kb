@@ -10,9 +10,12 @@
  *       {{PLACEHOLDER}} tokens so it's kept out of user-facing retrieval by
  *       default.
  */
-export type SourceTag = "SRC" | "ALH" | "MSTR";
+// NEW = the "recent policy changes / new processes" pool. Retrieval always
+// unions NEW refs in regardless of the caller's mode, and they get a small
+// score boost (see match_threads in 0010_new_source_pool.sql).
+export type SourceTag = "SRC" | "ALH" | "MSTR" | "NEW";
 
-export const SOURCE_TAGS: SourceTag[] = ["SRC", "ALH", "MSTR"];
+export const SOURCE_TAGS: SourceTag[] = ["SRC", "ALH", "MSTR", "NEW"];
 
 /** The two retrieval modes the UI exposes. */
 export type SourceMode = "SRC" | "SRC+ALH";

@@ -166,6 +166,7 @@ export default async function AdminPage({
       feedbackLogs={feedbackLogs}
       threads={threads}
       totalVotes={totalVotes}
+      currentUserRole={user.role}
       initialTab={initialTab}
     />
   );

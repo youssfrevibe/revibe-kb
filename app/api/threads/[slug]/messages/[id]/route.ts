@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/supabase";
 import { embedDocuments } from "@/lib/gemini";
 import { missingEnv, configErrorMessage } from "@/lib/config";
+import { currentUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
@@ -24,6 +25,14 @@ export async function PATCH(
   context: { params: Promise<{ slug: string; id: string }> },
 ) {
   const { slug, id } = await context.params;
+
+  // Reference editing is admin+owner only. Members can view SRC/ALH/MSTR/NEW
+  // threads but the Edit UI is hidden and the API rejects them here too.
+  const user = await currentUser(request);
+  if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (user.role !== "admin" && user.role !== "owner") {
+    return Response.json({ error: "Admin access required" }, { status: 403 });
+  }
 
   let body: { content?: unknown };
   try {

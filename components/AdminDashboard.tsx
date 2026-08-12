@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { marketLabel } from "@/lib/markets";
 import { FeedbackReviewList } from "./FeedbackReviewList";
+import { NewSourcePanel } from "./NewSourcePanel";
+import type { Role } from "@/lib/auth-shared";
 
 type DocumentRow = {
   title: string;
@@ -40,10 +43,59 @@ type Props = {
   threads: ThreadRow[];
   totalVotes: { good: number; bad: number };
   initialTab?: string;
+  /** Current viewer's role — controls Refresh (owner) vs Export (admin+owner). */
+  currentUserRole: Role;
 };
 
-export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, initialTab = "catalog" }: Props) {
+export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, initialTab = "catalog", currentUserRole }: Props) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"catalog" | "learning" | "requests" | "feedback" | string>(initialTab);
+  const [refreshing, setRefreshing] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const isOwner = currentUserRole === "owner";
+
+  async function refreshStats() {
+    // router.refresh() re-runs the parent RSC so totalVotes recomputes from
+    // the current DB state. No page navigation, no scroll jump.
+    setRefreshing(true);
+    try {
+      router.refresh();
+      // Give the server a moment before flipping the spinner off — otherwise
+      // the button flashes back to idle before the number updates.
+      await new Promise((resolve) => setTimeout(resolve, 800));
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  async function exportFeedbackCsv() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      const response = await fetch("/api/admin/export/feedback");
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(payload.error ?? "Export failed");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      // Timestamped filename so successive exports don't overwrite.
+      const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      link.download = `revibe-feedback-${stamp}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (caught) {
+      setExportError(caught instanceof Error ? caught.message : String(caught));
+    } finally {
+      setExporting(false);
+    }
+  }
 
   // Calculate tag counts
   const tagCounts: Record<string, number> = {};
@@ -171,9 +223,20 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
           >
             Request Analysis ({threads.length})
           </button>
+          <button
+            onClick={() => setActiveTab("new")}
+            className={`revibe-label px-4 py-2.5 text-[12px] border-b-2 transition-colors ${
+              activeTab === "new"
+                ? "border-[var(--revibe-ink)] font-semibold text-[var(--revibe-ink)]"
+                : "border-transparent text-[var(--revibe-ink-muted)] hover:text-[var(--revibe-ink)]"
+            }`}
+            title="Add or view NEW-tagged references — high-priority policy the AI always considers"
+          >
+            What&apos;s New
+          </button>
         </div>
 
-        <div className="flex gap-2 mb-1.5 flex-wrap">
+        <div className="flex gap-2 mb-1.5 flex-wrap items-center">
           <Link
             href="/admin/users"
             className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-gray-50"
@@ -181,6 +244,36 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
           >
             Manage Users
           </Link>
+
+          {/* Export CSV: available to Admin and Owner. Streams question / answer /
+              accurate / category so the accuracy stat can be verified against
+              a batch of test questions. */}
+          <button
+            type="button"
+            onClick={exportFeedbackCsv}
+            disabled={exporting}
+            title="Download all rated answers as CSV (Question, Answer, Accurate, Category)"
+            className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-gray-50 disabled:opacity-40"
+            style={{ borderColor: "var(--revibe-border)", color: "var(--revibe-ink)" }}
+          >
+            {exporting ? "Exporting…" : "Export CSV"}
+          </button>
+
+          {/* Refresh Stats: Owner-only. router.refresh() re-runs the server
+              components so the accuracy metric recomputes from live DB counts. */}
+          {isOwner ? (
+            <button
+              type="button"
+              onClick={refreshStats}
+              disabled={refreshing}
+              title="Recompute Support Accuracy from the current database (Owner only)"
+              className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-gray-50 disabled:opacity-40"
+              style={{ borderColor: "var(--revibe-accent)", color: "var(--revibe-accent)" }}
+            >
+              {refreshing ? "Refreshing…" : "Refresh Stats"}
+            </button>
+          ) : null}
+
           <Link
             href="/admin/teach"
             className="revibe-label revibe-focus rounded-[var(--revibe-radius)] px-3 py-1.5 text-[11px] font-semibold transition-colors"
@@ -189,6 +282,15 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
             Teach the AI &rarr;
           </Link>
         </div>
+        {exportError ? (
+          <div
+            className="mb-2 rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px]"
+            style={{ borderColor: "var(--revibe-error)", background: "var(--revibe-error-bg)", color: "var(--revibe-error)" }}
+            role="alert"
+          >
+            {exportError}
+          </div>
+        ) : null}
       </div>
 
       {/* Tab Contents */}
@@ -460,6 +562,18 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
             </p>
           </div>
           <FeedbackReviewList />
+        </div>
+      )}
+      {activeTab === "new" && (
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="revibe-label text-[12px]">New Processes &amp; Policies</h2>
+            <p className="mt-1 text-[11px]" style={{ color: "var(--revibe-ink-muted)" }}>
+              High-priority references. Every question against the AI considers NEW entries regardless
+              of source mode (SRC or SRC+ALH), with a small score boost so recent changes surface first.
+            </p>
+          </div>
+          <NewSourcePanel />
         </div>
       )}
     </div>

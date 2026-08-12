@@ -13,6 +13,8 @@ type Props = {
   refNumber: number | null;
   market: string;
   editedAt: string | null;
+  /** Whether to render the Edit button. Server route also enforces this. */
+  canEdit: boolean;
 };
 
 /**
@@ -34,6 +36,7 @@ export function ReferenceEditor({
   refNumber,
   market,
   editedAt,
+  canEdit,
 }: Props) {
   const [content, setContent] = useState(initialContent);
   const [draft, setDraft] = useState(initialContent);
@@ -189,7 +192,7 @@ export function ReferenceEditor({
               Cancel
             </button>
           </>
-        ) : (
+        ) : canEdit ? (
           <button
             type="button"
             onClick={() => setEditing(true)}
@@ -202,6 +205,10 @@ export function ReferenceEditor({
           >
             Edit
           </button>
+        ) : (
+          <span className="revibe-label text-[10px]" style={{ color: "var(--revibe-ink-faint)" }}>
+            Only admins can edit references.
+          </span>
         )}
       </div>
     </div>

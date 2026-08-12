@@ -262,7 +262,7 @@ async function main() {
 
   console.log("Loading sections…");
   const sections = await loadSections(supabase, args.only);
-  const byTag: Record<SourceTag, number> = { SRC: 0, ALH: 0, MSTR: 0 };
+  const byTag: Record<SourceTag, number> = { SRC: 0, ALH: 0, MSTR: 0, NEW: 0 };
   for (const s of sections) byTag[s.sourceTag]++;
 
   console.log(`Sections: ${sections.length} (SRC ${byTag.SRC}, ALH ${byTag.ALH}, MSTR ${byTag.MSTR})`);
@@ -286,7 +286,7 @@ async function main() {
 
   // Assign ref numbers per tag, densely 1..N. Deterministic because sections are
   // already sorted by (tag, market, doc, ord).
-  const counter: Record<SourceTag, number> = { SRC: 0, ALH: 0, MSTR: 0 };
+  const counter: Record<SourceTag, number> = { SRC: 0, ALH: 0, MSTR: 0, NEW: 0 };
   const jobs: { section: Section; refNumber: number }[] = [];
   for (const section of targets) {
     counter[section.sourceTag]++;
