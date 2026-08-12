@@ -33,6 +33,7 @@ export type UserRecord = {
   role: Role;
   createdAt: string | null;
   lastSignInAt: string | null;
+  lastActiveAt: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -55,6 +56,7 @@ function toRecord(uid: string, data: FirebaseFirestore.DocumentData): UserRecord
     role: (data.role as Role | undefined) ?? "member",
     createdAt: data.createdAt?.toDate?.().toISOString?.() ?? null,
     lastSignInAt: data.lastSignInAt?.toDate?.().toISOString?.() ?? null,
+    lastActiveAt: data.lastActiveAt?.toDate?.().toISOString?.() ?? null,
   };
 }
 
@@ -94,6 +96,7 @@ export async function upsertOnSignIn(args: {
       team: null,
       createdAt: FieldValue.serverTimestamp(),
       lastSignInAt: FieldValue.serverTimestamp(),
+      lastActiveAt: FieldValue.serverTimestamp(),
     });
   } else {
     const data = snap.data()!;
@@ -170,7 +173,18 @@ export async function currentUser(request?: NextRequest): Promise<UserRecord | n
   try {
     const decoded = await adminAuth().verifySessionCookie(cookieValue, true);
     if (!decoded.email || !/^[^\s@]+@revibe\.me$/i.test(decoded.email)) return null;
-    return await getUser(decoded.uid);
+    const user = await getUser(decoded.uid);
+    if (user) {
+      const now = new Date();
+      const lastActive = user.lastActiveAt ? new Date(user.lastActiveAt) : null;
+      if (!lastActive || now.getTime() - lastActive.getTime() > 2 * 60 * 1000) {
+        usersCollection().doc(decoded.uid).update({
+          lastActiveAt: FieldValue.serverTimestamp(),
+        }).catch(() => {});
+        user.lastActiveAt = now.toISOString();
+      }
+    }
+    return user;
   } catch {
     return null;
   }

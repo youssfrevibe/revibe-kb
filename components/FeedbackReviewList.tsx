@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MARKETS } from "@/lib/markets";
+import { AlignmentPicker } from "./AlignmentPicker";
 
 type CitedSource = {
   rank: number;
@@ -44,6 +45,9 @@ export function FeedbackReviewList() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [correctionText, setCorrectionText] = useState("");
   const [notes, setNotes] = useState("");
+  // When an approve/correct succeeds, the row stays visible and switches into
+  // an "align other sources?" panel. Cleared when the admin skips or finishes.
+  const [aligningReviewId, setAligningReviewId] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -79,12 +83,21 @@ export function FeedbackReviewList() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Action failed");
 
-      // Optimistically remove from the queue; reload the fresh list too.
-      setReviews((prev) => prev.filter((review_) => review_.id !== review.id));
       setPendingAction(null);
       setCorrectionText("");
       setNotes("");
-      void load();
+
+      if (action === "approve" || action === "correct") {
+        // Keep the row visible but flipped into the alignment step. Reload
+        // happens once the admin finishes or skips alignment — that way
+        // fresh reviews landing in the queue don't yank this row away
+        // mid-alignment.
+        setAligningReviewId(review.id);
+      } else {
+        // Invalid: gone from the queue entirely.
+        setReviews((prev) => prev.filter((review_) => review_.id !== review.id));
+        void load();
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : String(caught));
     } finally {
@@ -124,6 +137,7 @@ export function FeedbackReviewList() {
       {reviews.map((review) => {
         const expanded = expandedId === review.id;
         const pending = pendingAction?.id === review.id ? pendingAction.action : null;
+        const aligning = aligningReviewId === review.id;
         const marketShort =
           review.market && review.market in MARKETS
             ? MARKETS[review.market as keyof typeof MARKETS].short

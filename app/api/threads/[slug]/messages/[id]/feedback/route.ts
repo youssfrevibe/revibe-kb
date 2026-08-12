@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/supabase";
 import { missingEnv, configErrorMessage } from "@/lib/config";
 import { currentUser } from "@/lib/auth";
+import { embedDocuments } from "@/lib/gemini";
+import { newSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
 
@@ -155,6 +157,61 @@ export async function POST(
     if (queueError && !/unique/i.test(queueError.message)) {
       console.error("Failed to enqueue feedback review:", queueError.message);
       return Response.json({ error: queueError.message }, { status: 500 });
+    }
+  }
+
+  // 6. On good ratings, reinforce the AI by auto-minting an ALH reference thread.
+  if (rating === "good") {
+    try {
+      const refSlug = newSlug();
+      const cleanQuestion = questionText.split("\n")[0].trim().slice(0, 60);
+      const refTitle = `Reinforced Answer · ${thread.market.toUpperCase()} · ${cleanQuestion}${cleanQuestion.length >= 60 ? "…" : ""}`;
+
+      const refBody = [
+        `**REINFORCED ANSWER** · ${thread.market.toUpperCase()} · rated helpful by ${user.email}`,
+        `Original question: ${questionText}`,
+        "",
+        `Good answer:`,
+        originalMessage.content,
+      ].join("\n");
+
+      const [embedding] = await embedDocuments([refBody]);
+      
+      const { data: maxRows } = await supabase
+        .from("threads")
+        .select("ref_number")
+        .eq("source_tag", "ALH")
+        .order("ref_number", { ascending: false })
+        .limit(1);
+      const nextRefNumber = ((maxRows?.[0]?.ref_number as number) ?? 0) + 1;
+
+      const { data: newThread, error: threadError } = await supabase
+        .from("threads")
+        .insert({
+          slug: refSlug,
+          title: refTitle,
+          market: thread.market,
+          source_tag: "ALH",
+          ref_number: nextRefNumber,
+        })
+        .select("id")
+        .single();
+
+      if (!threadError && newThread) {
+        await supabase
+          .from("messages")
+          .insert({
+            thread_id: newThread.id,
+            role: "assistant",
+            content: refBody,
+            embedding,
+            embedded_at: new Date().toISOString(),
+          });
+      } else {
+        console.error("Failed to create reinforced thread:", threadError?.message);
+      }
+    } catch (err) {
+      console.error("Failed to embed or save reinforced good answer:", err);
     }
   }
 

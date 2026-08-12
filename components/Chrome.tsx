@@ -72,7 +72,7 @@ export function Chrome({
             className="revibe-label hidden text-[11px] sm:block"
             style={{ color: "var(--revibe-ink-muted)" }}
           >
-            Knowledge Base
+            Knowledge Base v0.7
           </span>
 
           <nav className="ml-auto flex items-center gap-1">

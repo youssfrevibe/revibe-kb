@@ -20,3 +20,4 @@ sources/*
 # with the JSON can mint tokens for the whole project.
 revibe-kb-*-firebase-adminsdk-*.json
 *-firebase-adminsdk-*.json
+vercel_env_setup.md
