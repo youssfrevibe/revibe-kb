@@ -24,10 +24,12 @@
     "react-dom": "^19.0.0"
   },
   "comments": {
-    "overrides": "unpdf optionally depends on canvas (for rendering PDFs to images, which we never do) which pulls @mapbox/node-pre-gyp -> tar@6. tar@6 carries critical advisories. We cannot omit optional deps wholesale because Next's SWC platform binaries are optional too, so tar is pinned forward instead. If canvas's native build fails as a result, nothing is lost — it is an optional dep we do not use."
+    "overrides.tar": "unpdf optionally depends on canvas (for rendering PDFs to images, which we never do) which pulls @mapbox/node-pre-gyp -> tar@6. tar@6 carries critical advisories. We cannot omit optional deps wholesale because Next's SWC platform binaries are optional too, so tar is pinned forward instead. If canvas's native build fails as a result, nothing is lost — it is an optional dep we do not use.",
+    "overrides.jose": "firebase-admin@14 → jwks-rsa@3 → jose@5+ (ESM-only). Vercel Node runtime crashes at boot with ERR_REQUIRE_ESM when jwks-rsa tries to require() jose. jose@4 still ships CJS, so pinning it here lets jwks-rsa require() work again. Auth still verifies fine — jose@4 has all the JWK/JWT primitives firebase-admin needs."
   },
   "overrides": {
-    "tar": "^7.5.21"
+    "tar": "^7.5.21",
+    "jose": "^4.15.9"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
