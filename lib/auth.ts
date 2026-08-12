@@ -171,7 +171,7 @@ export async function currentUser(request?: NextRequest): Promise<UserRecord | n
   if (!cookieValue) return null;
 
   try {
-    const decoded = await adminAuth().verifySessionCookie(cookieValue, true);
+    const decoded = await adminAuth().verifySessionCookie(cookieValue, false);
     if (!decoded.email || !/^[^\s@]+@revibe\.me$/i.test(decoded.email)) return null;
     const user = await getUser(decoded.uid);
     if (user) {
