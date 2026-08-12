@@ -1,22 +1,30 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/supabase";
-import { embedDocuments } from "@/lib/gemini";
 import { missingEnv, configErrorMessage } from "@/lib/config";
-import { newSlug } from "@/lib/slug";
+import { currentUser } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
 /**
- * Handle feedback (good/bad rating) and correction submissions for a message.
+ * Feedback submission — good/bad + mandatory correction on bad.
  *
- * POST /api/threads/[slug]/messages/[id]/feedback
- * body: { rating: 'good' | 'bad', correction?: string }
+ * BEHAVIOUR CHANGE: bad + correction no longer auto-creates an ALH reference
+ * thread. It now writes a row to `feedback_reviews` with status='pending'
+ * for an Admin to review. Approve/Correct is what actually mints the ALH
+ * ref — see /api/admin/reviews/[id]/*.
+ *
+ * The old `messages.feedback_rating` and `messages.feedback_correction`
+ * columns keep being written so the existing dashboard still sees ratings
+ * flowing through.
  */
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ slug: string; id: string }> },
 ) {
   const { slug, id } = await context.params;
+
+  const user = await currentUser(request);
+  if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
 
   let body: { rating?: unknown; correction?: unknown };
   try {
@@ -31,9 +39,11 @@ export async function POST(
   if (rating !== "good" && rating !== "bad") {
     return Response.json({ error: "rating must be 'good' or 'bad'" }, { status: 400 });
   }
-
   if (rating === "bad" && !correction) {
     return Response.json({ error: "correction is mandatory for bad answers" }, { status: 400 });
+  }
+  if (correction.length > 5000) {
+    return Response.json({ error: "correction is too long (5000 char limit)" }, { status: 400 });
   }
 
   const missing = missingEnv();
@@ -41,7 +51,7 @@ export async function POST(
 
   const supabase = db();
 
-  // 1. Verify that the message exists and belongs to the thread
+  // 1. Verify the message exists and belongs to the thread.
   const { data: originalMessage, error: lookupError } = await supabase
     .from("messages")
     .select("id, role, thread_id, content, created_at, threads!inner(slug, market)")
@@ -55,9 +65,12 @@ export async function POST(
   if (!thread || thread.slug !== slug) {
     return Response.json({ error: "Message does not belong to this thread" }, { status: 404 });
   }
+  if (originalMessage.role !== "assistant") {
+    return Response.json({ error: "Only assistant messages take feedback" }, { status: 400 });
+  }
 
-  // 2. Fetch the user's question asked immediately before this assistant message
-  const { data: priorMessages, error: priorError } = await supabase
+  // 2. Fetch the user's question — the message immediately before this one.
+  const { data: priorMessages } = await supabase
     .from("messages")
     .select("role, content")
     .eq("thread_id", originalMessage.thread_id)
@@ -65,93 +78,85 @@ export async function POST(
     .order("created_at", { ascending: false })
     .limit(1);
 
-  if (priorError) return Response.json({ error: priorError.message }, { status: 500 });
   const questionMessage = priorMessages?.[0];
-  const questionText = questionMessage?.role === "user" ? questionMessage.content : "User Question";
+  const questionText = questionMessage?.role === "user" ? questionMessage.content : "(question missing)";
 
-  // 3. Update the feedback columns on the original assistant message
+  // 3. Snapshot the sources at feedback time so the reviewer sees exactly what
+  //    the agent saw. If the underlying refs later get edited, the review still
+  //    holds the historical context.
+  const { data: sourceRows } = await supabase
+    .from("message_sources")
+    .select(
+      `rank,
+       source_message:messages!source_message_id (
+         threads:thread_id (slug, title, market, source_tag, ref_number)
+       )`,
+    )
+    .eq("message_id", id)
+    .not("source_message_id", "is", null)
+    .order("rank", { ascending: true });
+
+  type SnapRow = {
+    rank: number;
+    source_message: {
+      threads: {
+        slug: string;
+        title: string;
+        market: string;
+        source_tag: string;
+        ref_number: number | null;
+      } | null;
+    } | null;
+  };
+  const citedSources = ((sourceRows ?? []) as unknown as SnapRow[])
+    .flatMap((row) => {
+      const t = row.source_message?.threads;
+      if (!t) return [];
+      return [{
+        rank: row.rank,
+        threadSlug: t.slug,
+        title: t.title,
+        market: t.market,
+        sourceTag: t.source_tag,
+        refNumber: t.ref_number,
+      }];
+    });
+
+  // 4. Update the assistant message with the rating + correction (keeps the
+  //    existing dashboard's data flowing) and the reviewer identity.
   const { error: updateError } = await supabase
     .from("messages")
     .update({
       feedback_rating: rating,
       feedback_correction: rating === "bad" ? correction : null,
+      feedback_by: user.uid,
     })
     .eq("id", id);
-
   if (updateError) return Response.json({ error: updateError.message }, { status: 500 });
 
-  // 4. If rating is bad with a correction, create a new reference thread to "teach" the AI
+  // 5. On bad ratings, enqueue for admin review. Do NOT auto-create an ALH ref
+  //    — that used to happen here but is now the admin's decision.
   if (rating === "bad" && correction) {
-    const refSlug = newSlug();
-    const cleanQuestion = questionText.split("\n")[0].trim().slice(0, 60);
-    const refTitleStr = `Feedback Correction · ${thread.market.toUpperCase()} · ${cleanQuestion}...`;
-
-    // Format the reference thread content clearly so it acts as high-quality RAG content
-    const refBodyContent = [
-      `**FEEDBACK CORRECTION** · ${thread.market.toUpperCase()} · Reference ID: FEEDBACK-${refSlug}`,
-      `Original Question: ${questionText}`,
-      "",
-      `Correct Policy/Procedure (provided by support staff):`,
-      correction,
-    ].join("\n");
-
-    // Fetch next ref_number for 'ALH' source_tag to maintain unique index (source_tag, ref_number)
-    const { data: maxRows } = await supabase
-      .from("threads")
-      .select("ref_number")
-      .eq("source_tag", "ALH")
-      .order("ref_number", { ascending: false })
-      .limit(1);
-    
-    const nextRefNumber = ((maxRows?.[0]?.ref_number as number) ?? 0) + 1;
-
-    // Generate embedding for the corrected reference message
-    let embedding: number[];
-    try {
-      [embedding] = await embedDocuments([refBodyContent]);
-    } catch (embedErr) {
-      console.error("Failed to embed feedback correction:", embedErr);
-      // We still succeed the request because the feedback rating itself has been recorded
-      return Response.json({
-        ok: true,
-        rating,
-        correction,
-        warning: "Feedback saved, but failed to embed correction for AI training",
-      });
-    }
-
-    // Insert the new reference thread
-    const { data: newThread, error: newThreadErr } = await supabase
-      .from("threads")
+    const { error: queueError } = await supabase
+      .from("feedback_reviews")
       .insert({
-        slug: refSlug,
-        title: refTitleStr,
+        message_id: id,
+        submitted_by: user.uid,
+        question: questionText,
+        wrong_answer: originalMessage.content,
+        cited_sources: citedSources,
         market: thread.market,
-        source_tag: "ALH",
-        ref_number: nextRefNumber,
-      })
-      .select("id")
-      .single();
-
-    if (newThreadErr) {
-      console.error("Failed to create feedback correction thread:", newThreadErr.message);
-    } else {
-      // Insert the retrievable assistant message
-      const { error: newMsgErr } = await supabase
-        .from("messages")
-        .insert({
-          thread_id: newThread.id,
-          role: "assistant",
-          content: refBodyContent,
-          embedding: embedding,
-          embedded_at: new Date().toISOString(),
-        });
-
-      if (newMsgErr) {
-        console.error("Failed to create feedback correction message:", newMsgErr.message);
-      }
+        submitted_correction: correction,
+        status: "pending",
+      });
+    // A pending row for the same message already exists — that's fine, the
+    // partial unique index prevents duplicates. Surface the resulting state,
+    // don't fail the request.
+    if (queueError && !/unique/i.test(queueError.message)) {
+      console.error("Failed to enqueue feedback review:", queueError.message);
+      return Response.json({ error: queueError.message }, { status: 500 });
     }
   }
 
-  return Response.json({ ok: true, rating, correction });
+  return Response.json({ ok: true, rating, correction, queued: rating === "bad" });
 }

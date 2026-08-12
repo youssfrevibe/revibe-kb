@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import { db } from "@/lib/supabase";
 import { missingEnv, configErrorMessage } from "@/lib/config";
 import { AdminDashboard } from "@/components/AdminDashboard";
+import { currentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Indexed material · Revibe Knowledge Base" };
@@ -28,6 +30,12 @@ type DBThread = {
 };
 
 export default async function AdminPage() {
+  // Role gate: admin + owner only. Members hitting this URL (from a stale
+  // link or a bookmark) get sent back to /ask rather than a raw 403.
+  const user = await currentUser();
+  if (!user) redirect("/sign-in");
+  if (user.role !== "admin" && user.role !== "owner") redirect("/ask");
+
   const missing = missingEnv();
   if (missing.length > 0) {
     return (

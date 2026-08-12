@@ -1,10 +1,16 @@
+import { redirect } from "next/navigation";
 import { missingEnv, configErrorMessage } from "@/lib/config";
 import { TeachChat } from "@/components/TeachChat";
+import { currentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Teach the AI · Revibe Knowledge Base" };
 
-export default function TeachPage() {
+export default async function TeachPage() {
+  const user = await currentUser();
+  if (!user) redirect("/sign-in");
+  if (user.role !== "admin" && user.role !== "owner") redirect("/ask");
+
   const missing = missingEnv();
   if (missing.length > 0) {
     return (

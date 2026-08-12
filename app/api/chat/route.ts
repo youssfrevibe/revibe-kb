@@ -7,6 +7,7 @@ import { detectMarkets, marketFilterFor, describeRoute } from "@/lib/market-dete
 import { isSourceMode, SOURCE_MODE_LABEL, type SourceMode } from "@/lib/source-tags";
 import { newSlug, titleFromQuestion } from "@/lib/slug";
 import { missingEnv, configErrorMessage } from "@/lib/config";
+import { currentUser } from "@/lib/auth";
 import type { Market } from "@/lib/markets";
 
 export const runtime = "nodejs";
@@ -52,6 +53,11 @@ export async function POST(request: NextRequest) {
   if (!message) return Response.json({ error: "message is required" }, { status: 400 });
   if (message.length > 4000) return Response.json({ error: "message is too long (4000 char limit)" }, { status: 400 });
 
+  // Identity — the middleware only checks cookie presence, so the real
+  // verify-and-lookup happens here. Every chat turn is attributed to a user.
+  const user = await currentUser(request);
+  if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
+
   const missing = missingEnv();
   if (missing.length > 0) return Response.json({ error: configErrorMessage(missing) }, { status: 503 });
 
@@ -96,10 +102,11 @@ export async function POST(request: NextRequest) {
     slug = newSlug();
     title = titleFromQuestion(message);
     // No market column stored: every turn re-detects from its own text plus
-    // the rewritten follow-up context.
+    // the rewritten follow-up context. user_uid attributes the chat so the
+    // audit log and Previous Chats list know who owned it.
     const { data: created, error } = await supabase
       .from("threads")
-      .insert({ slug, title, market: "global" })
+      .insert({ slug, title, market: "global", user_uid: user.uid })
       .select("id")
       .single();
     if (error) return Response.json({ error: error.message }, { status: 500 });

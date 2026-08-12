@@ -14,3 +14,9 @@ sources/*
 
 .vercel
 .env*
+
+# Firebase Admin SDK service-account private keys. Downloaded from Firebase
+# Console → Project settings → Service accounts. Never commit these — anyone
+# with the JSON can mint tokens for the whole project.
+revibe-kb-*-firebase-adminsdk-*.json
+*-firebase-adminsdk-*.json
