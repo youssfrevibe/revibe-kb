@@ -161,13 +161,22 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes }:
           </button>
         </div>
 
-        <Link
-          href="/admin/teach"
-          className="revibe-label revibe-focus mb-1.5 rounded-[var(--revibe-radius)] px-3 py-1.5 text-[11px] font-semibold transition-colors"
-          style={{ background: "var(--revibe-ink)", color: "#fff" }}
-        >
-          Teach the AI &rarr;
-        </Link>
+        <div className="flex gap-2 mb-1.5">
+          <Link
+            href="/admin/users"
+            className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-gray-50"
+            style={{ borderColor: "var(--revibe-border)", color: "var(--revibe-ink)" }}
+          >
+            Manage Users
+          </Link>
+          <Link
+            href="/admin/teach"
+            className="revibe-label revibe-focus rounded-[var(--revibe-radius)] px-3 py-1.5 text-[11px] font-semibold transition-colors"
+            style={{ background: "var(--revibe-ink)", color: "#fff" }}
+          >
+            Teach the AI &rarr;
+          </Link>
+        </div>
       </div>
 
       {/* Tab Contents */}
