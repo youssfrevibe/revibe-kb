@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["firebase-admin"],
+  serverExternalPackages: ["firebase-admin", "jwks-rsa", "jose"],
   // The app is embedded into revibe.training.hub via an iframe pointed at ?embed=1.
   // Default-deny framing, then allow the hub explicitly.
   async headers() {
