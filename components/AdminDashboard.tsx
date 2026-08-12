@@ -51,6 +51,7 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"catalog" | "learning" | "requests" | "feedback" | string>(initialTab);
   const [refreshing, setRefreshing] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -67,6 +68,23 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
       await new Promise((resolve) => setTimeout(resolve, 800));
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  async function resetStats() {
+    if (!confirm("This will clear ALL feedback votes and reset the success rate to blank. Corrections and knowledge stay. Continue?")) return;
+    setResetting(true);
+    try {
+      const res = await fetch("/api/admin/reset-stats", { method: "POST" });
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({ error: res.statusText }));
+        alert(payload.error ?? "Reset failed");
+        return;
+      }
+      router.refresh();
+      await new Promise((resolve) => setTimeout(resolve, 800));
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -259,19 +277,29 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
             {exporting ? "Exporting…" : "Export CSV"}
           </button>
 
-          {/* Refresh Stats: Owner-only. router.refresh() re-runs the server
-              components so the accuracy metric recomputes from live DB counts. */}
           {isOwner ? (
-            <button
-              type="button"
-              onClick={refreshStats}
-              disabled={refreshing}
-              title="Recompute Support Accuracy from the current database (Owner only)"
-              className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-gray-50 disabled:opacity-40"
-              style={{ borderColor: "var(--revibe-accent)", color: "var(--revibe-accent)" }}
-            >
-              {refreshing ? "Refreshing…" : "Refresh Stats"}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={refreshStats}
+                disabled={refreshing}
+                title="Recompute Support Accuracy from the current database (Owner only)"
+                className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-gray-50 disabled:opacity-40"
+                style={{ borderColor: "var(--revibe-accent)", color: "var(--revibe-accent)" }}
+              >
+                {refreshing ? "Refreshing…" : "Refresh Stats"}
+              </button>
+              <button
+                type="button"
+                onClick={resetStats}
+                disabled={resetting}
+                title="Clear all feedback votes and reset success rate to blank (Owner only)"
+                className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-3 py-1.5 text-[11px] font-semibold transition-colors hover:bg-red-50 disabled:opacity-40"
+                style={{ borderColor: "#f43f5e", color: "#f43f5e" }}
+              >
+                {resetting ? "Resetting…" : "Reset Stats"}
+              </button>
+            </>
           ) : null}
 
           <Link
