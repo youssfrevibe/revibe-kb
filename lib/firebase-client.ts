@@ -61,11 +61,20 @@ export function firestore(): Firestore {
   return getFirestore(firebaseApp());
 }
 
-const provider = new GoogleAuthProvider();
-// Ask Google for the Revibe workspace by default; users who pick a personal
-// account get bounced by the server-side @revibe.me check anyway, but this
-// hint saves them a click.
-provider.setCustomParameters({ hd: "revibe.me", prompt: "select_account" });
+// Lazy-init the Google provider. Instantiating it at module top-level made
+// SSR of any layout that imports this file crash with a 500 on Vercel — the
+// Firebase Web SDK isn't intended to construct providers in a Node runtime,
+// even though the "use client" annotation says the module is client-only.
+// Next still evaluates the module during SSR for initial HTML, so any
+// eager side effect here runs on the server.
+let googleProvider: GoogleAuthProvider | null = null;
+function getGoogleProvider(): GoogleAuthProvider {
+  if (googleProvider) return googleProvider;
+  const p = new GoogleAuthProvider();
+  p.setCustomParameters({ hd: "revibe.me", prompt: "select_account" });
+  googleProvider = p;
+  return p;
+}
 
 /** Every email sign-in / sign-up is checked here before hitting Firebase. */
 function assertRevibeEmail(email: string): void {
@@ -76,7 +85,7 @@ function assertRevibeEmail(email: string): void {
 
 /** Google sign-in. Returns the Firebase user + a fresh ID token. */
 export async function signInWithGoogle(): Promise<{ user: FirebaseUser; idToken: string }> {
-  const result = await signInWithPopup(auth(), provider);
+  const result = await signInWithPopup(auth(), getGoogleProvider());
   if (!result.user.email || !/^[^\s@]+@revibe\.me$/i.test(result.user.email)) {
     // Sign them straight back out — the server would reject the token anyway.
     await fbSignOut(auth());

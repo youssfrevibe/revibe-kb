@@ -18,7 +18,10 @@ import { getFirestore, type Firestore } from "firebase-admin/firestore";
 let app: App | null = null;
 
 function parseServiceAccount(raw: string): ServiceAccount {
-  const trimmed = raw.trim();
+  let trimmed = raw.trim();
+  if ((trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'))) {
+    trimmed = trimmed.slice(1, -1);
+  }
   const json = trimmed.startsWith("{") ? trimmed : Buffer.from(trimmed, "base64").toString("utf8");
   const parsed = JSON.parse(json) as Record<string, string>;
   // Handle the classic "\n → literal \n" gotcha in copy-pasted keys.
