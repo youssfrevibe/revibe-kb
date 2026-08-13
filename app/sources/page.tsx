@@ -20,11 +20,12 @@ export default async function SourcesPage() {
 
   const supabase = db();
 
-  // Fetch all SRC and ALH reference threads with their assistant message content
+  // Fetch all knowledge-base reference threads with their assistant message content.
+  // Everything except the master template (MSTR) and Q&A threads (null tag).
   const { data: rawThreads, error } = await supabase
     .from("threads")
     .select("slug, title, source_tag, ref_number, market, updated_at, messages(id, content, role)")
-    .in("source_tag", ["SRC", "ALH"])
+    .in("source_tag", ["TR1", "TR2", "NEWP", "NEWL"])
     .order("source_tag", { ascending: true })
     .order("ref_number", { ascending: true });
 

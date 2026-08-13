@@ -232,7 +232,7 @@ export function AlignmentPicker({ reviewId, onDone }: Props) {
                       {label}
                     </Link>
                     <span className="flex-1 text-[12px] font-semibold">
-                      {candidate.title.replace(/^(?:SRC|ALH|MSTR)-\d+ · /, "")}
+                      {candidate.title.replace(/^(?:TR1|TR2|NEWP|NEWL|MSTR)-\d+ · /, "")}
                     </span>
                     <span
                       className="rounded px-1 text-[9px] uppercase tracking-wider"

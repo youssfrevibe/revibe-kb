@@ -14,9 +14,9 @@ export const runtime = "nodejs";
  * body:
  *   { action: 'approve' }              → uses the submitted correction verbatim
  *   { action: 'correct', text: '...' } → uses the admin's rewritten text instead
- *   { action: 'invalid', notes?: '' }  → no ALH ref created, row stays for audit
+ *   { action: 'invalid', notes?: '' }  → no NEWL ref created, row stays for audit
  *
- * On approve/correct, this is where the ALH reference thread gets created —
+ * On approve/correct, this is where the NEWL reference thread gets created —
  * the move from the auto-teach flow. On invalid, nothing gets taught.
  */
 export async function POST(
@@ -67,7 +67,7 @@ export async function POST(
 
   const now = new Date().toISOString();
 
-  // 2. Invalid path: mark and return, no ALH ref.
+  // 2. Invalid path: mark and return, no NEWL ref.
   if (action === "invalid") {
     const { error: updateError } = await supabase
       .from("feedback_reviews")
@@ -82,7 +82,7 @@ export async function POST(
     return Response.json({ ok: true, status: "invalid" });
   }
 
-  // 3. Approve/correct: mint the ALH reference thread. This is the code path
+  // 3. Approve/correct: mint the NEWL reference thread. This is the code path
   //    that used to fire automatically inside the feedback route.
   const finalCorrection = action === "correct" ? text : (review.submitted_correction as string);
   const market = (review.market as string) || "global";
@@ -93,7 +93,7 @@ export async function POST(
   const refTitle = `Reviewed Correction · ${market.toUpperCase()} · ${cleanQuestion}${cleanQuestion.length >= 60 ? "…" : ""}`;
 
   // Structured body — the reviewer's decision, the source question, and the
-  // corrected policy — so retrieval sees a rich, self-contained ALH passage.
+  // corrected policy — so retrieval sees a rich, self-contained NEWL passage.
   const refBody = [
     `**REVIEWED CORRECTION** · ${market.toUpperCase()} · reviewed by ${user.email}`,
     `Original question: ${question}`,
@@ -110,12 +110,12 @@ export async function POST(
     return Response.json({ error: `Embedding failed: ${detail}` }, { status: 502 });
   }
 
-  // Next ALH ref number. Same race caveat as the earlier auto-teach code —
+  // Next NEWL ref number. Same race caveat as the earlier auto-teach code —
   // rare in practice but noted.
   const { data: maxRows } = await supabase
     .from("threads")
     .select("ref_number")
-    .eq("source_tag", "ALH")
+    .eq("source_tag", "NEWL")
     .order("ref_number", { ascending: false })
     .limit(1);
   const nextRefNumber = ((maxRows?.[0]?.ref_number as number) ?? 0) + 1;
@@ -126,7 +126,7 @@ export async function POST(
       slug: refSlug,
       title: refTitle,
       market,
-      source_tag: "ALH",
+      source_tag: "NEWL",
       ref_number: nextRefNumber,
     })
     .select("id")

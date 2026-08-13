@@ -12,9 +12,9 @@ export const runtime = "nodejs";
  * PATCH /api/threads/[slug]/messages/[id]
  * body: { content: string }
  *
- * Only allowed on threads with a source_tag (the SRC/ALH/MSTR reference
- * catalog). Q&A threads are conversation history — editing them would rewrite
- * what a user actually asked, which is worse than useless.
+ * Only allowed on threads with a source_tag (the TR1/TR2/NEWP/NEWL/MSTR
+ * reference catalog). Q&A threads are conversation history — editing them would
+ * rewrite what a user actually asked, which is worse than useless.
  *
  * The moment this succeeds, future retrievals that hit this reference return
  * the updated wording. No re-ingest, no rebuild — that's the whole reason for
@@ -26,7 +26,7 @@ export async function PATCH(
 ) {
   const { slug, id } = await context.params;
 
-  // Reference editing is admin+owner only. Members can view SRC/ALH/MSTR/NEW
+  // Reference editing is admin+owner only. Members can view TR1/TR2/NEWP/NEWL/MSTR
   // threads but the Edit UI is hidden and the API rejects them here too.
   const user = await currentUser(request);
   if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
@@ -64,7 +64,7 @@ export async function PATCH(
 
   const thread = message.threads as unknown as { slug: string; source_tag: string | null } | null;
   if (!thread || thread.slug !== slug) return Response.json({ error: "Message does not belong to this thread" }, { status: 404 });
-  if (!thread.source_tag) return Response.json({ error: "Only reference threads (SRC/ALH/MSTR) can be edited" }, { status: 403 });
+  if (!thread.source_tag) return Response.json({ error: "Only reference threads (TR1/TR2/NEWP/NEWL/MSTR) can be edited" }, { status: 403 });
   if (message.role !== "assistant") return Response.json({ error: "Only the reference body is editable" }, { status: 403 });
 
   // Embed FIRST — if this fails, the message stays intact and searchable at

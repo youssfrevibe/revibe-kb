@@ -248,7 +248,7 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
                 ? "border-[var(--revibe-ink)] font-semibold text-[var(--revibe-ink)]"
                 : "border-transparent text-[var(--revibe-ink-muted)] hover:text-[var(--revibe-ink)]"
             }`}
-            title="Add or view NEW-tagged references — high-priority policy the AI always considers"
+            title="Add or view NEWP-tagged references — high-priority policy the AI always considers"
           >
             What&apos;s New
           </button>
@@ -597,8 +597,8 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
           <div>
             <h2 className="revibe-label text-[12px]">New Processes &amp; Policies</h2>
             <p className="mt-1 text-[11px]" style={{ color: "var(--revibe-ink-muted)" }}>
-              High-priority references. Every question against the AI considers NEW entries regardless
-              of source mode (SRC or SRC+ALH), with a small score boost so recent changes surface first.
+              High-priority references. Every question against the AI considers NEWP policy entries,
+              with a tier score boost so recent policy changes surface above general reference material.
             </p>
           </div>
           <NewSourcePanel />

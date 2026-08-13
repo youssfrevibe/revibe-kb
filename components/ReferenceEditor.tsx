@@ -24,8 +24,8 @@ type Props = {
  * re-embeds it server-side. The next retrieval that hits this reference sees
  * the updated wording — that's the whole point of the pivot.
  *
- * Only rendered on threads with a source_tag (SRC/ALH/MSTR). Q&A threads use
- * the regular <Chat> component; editing a past conversation is nonsense.
+ * Only rendered on threads with a source_tag (TR1/TR2/NEWP/NEWL/MSTR). Q&A
+ * threads use the regular <Chat> component; editing a past conversation is nonsense.
  */
 export function ReferenceEditor({
   threadSlug,
@@ -96,7 +96,7 @@ export function ReferenceEditor({
           {refLabel}
         </span>
         <h1 className="text-[15px] font-semibold" style={{ color: "var(--revibe-ink)" }}>
-          {title.replace(/^(?:SRC|ALH|MSTR)-\d+ · /, "")}
+          {title.replace(/^(?:TR1|TR2|NEWP|NEWL|MSTR)-\d+ · /, "")}
         </h1>
         <span
           className="revibe-label rounded px-1.5 py-0.5 text-[10px]"

@@ -39,7 +39,7 @@ export function SourcesBrowser({ sources }: { sources: Source[] }) {
       <div>
         <h1 className="revibe-label text-[13px]">Sources</h1>
         <p className="mt-1 text-[12px]" style={{ color: "var(--revibe-ink-muted)" }}>
-          All indexed reference material (SRC &amp; ALH). Click any source to view or edit its content.
+          All indexed knowledge base material (TR1, TR2, NEWP &amp; NEWL). Click any source to view or edit its content.
         </p>
       </div>
 
@@ -125,7 +125,7 @@ export function SourcesBrowser({ sources }: { sources: Source[] }) {
                     {source.refLabel}
                   </span>
                   <span className="flex-1 text-[13px] font-semibold leading-6">
-                    {source.title.replace(/^(?:SRC|ALH|MSTR)-\d+ · /, "")}
+                    {source.title.replace(/^(?:TR1|TR2|NEWP|NEWL|MSTR)-\d+ · /, "")}
                   </span>
                   <span
                     className="revibe-label shrink-0 rounded px-1.5 py-px text-[10px]"

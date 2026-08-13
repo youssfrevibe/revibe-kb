@@ -292,7 +292,7 @@ export function FeedbackReviewList() {
                         disabled={busyId === review.id}
                         className="revibe-label revibe-focus rounded-[var(--revibe-radius)] px-3 py-1.5 text-[11px] transition-opacity disabled:opacity-40"
                         style={{ background: "var(--revibe-ink)", color: "#fff" }}
-                        title="Use the agent's correction verbatim as a new ALH reference"
+                        title="Use the agent's correction verbatim as a new NEWL reference"
                       >
                         Approve
                       </button>

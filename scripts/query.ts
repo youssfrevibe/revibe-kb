@@ -4,7 +4,7 @@
  * answer.
  *
  *   npm run query -- "how long is the shipping SLA for Saudi Arabia"
- *   npm run query -- --mode SRC "restocking fee in UAE"
+ *   npm run query -- --k 10 "restocking fee in UAE"
  */
 import { config as loadEnv } from "dotenv";
 loadEnv({ path: ".env.local" });

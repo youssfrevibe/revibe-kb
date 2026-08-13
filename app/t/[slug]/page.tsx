@@ -10,9 +10,9 @@ import { currentUser } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 /**
- * A saved thread — either a Q&A conversation or an editable reference (SRC /
- * ALH / MSTR). The route decides which component to render based on the
- * thread's source_tag.
+ * A saved thread — either a Q&A conversation or an editable reference (TR1 /
+ * TR2 / NEWP / NEWL / MSTR). The route decides which component to render based
+ * on the thread's source_tag.
  */
 export default async function ThreadPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

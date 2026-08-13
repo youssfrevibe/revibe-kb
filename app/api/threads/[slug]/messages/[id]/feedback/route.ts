@@ -10,9 +10,9 @@ export const runtime = "nodejs";
 /**
  * Feedback submission — good/bad + mandatory correction on bad.
  *
- * BEHAVIOUR CHANGE: bad + correction no longer auto-creates an ALH reference
+ * BEHAVIOUR CHANGE: bad + correction no longer auto-creates a NEWL reference
  * thread. It now writes a row to `feedback_reviews` with status='pending'
- * for an Admin to review. Approve/Correct is what actually mints the ALH
+ * for an Admin to review. Approve/Correct is what actually mints the NEWL
  * ref — see /api/admin/reviews/[id]/*.
  *
  * The old `messages.feedback_rating` and `messages.feedback_correction`
@@ -136,7 +136,7 @@ export async function POST(
     .eq("id", id);
   if (updateError) return Response.json({ error: updateError.message }, { status: 500 });
 
-  // 5. On bad ratings, enqueue for admin review. Do NOT auto-create an ALH ref
+  // 5. On bad ratings, enqueue for admin review. Do NOT auto-create a NEWL ref
   //    — that used to happen here but is now the admin's decision.
   if (rating === "bad" && correction) {
     const { error: queueError } = await supabase
@@ -160,7 +160,7 @@ export async function POST(
     }
   }
 
-  // 6. On good ratings, reinforce the AI by auto-minting an ALH reference thread.
+  // 6. On good ratings, reinforce the AI by auto-minting a NEWL reference thread.
   if (rating === "good") {
     try {
       const refSlug = newSlug();
@@ -180,7 +180,7 @@ export async function POST(
       const { data: maxRows } = await supabase
         .from("threads")
         .select("ref_number")
-        .eq("source_tag", "ALH")
+        .eq("source_tag", "NEWL")
         .order("ref_number", { ascending: false })
         .limit(1);
       const nextRefNumber = ((maxRows?.[0]?.ref_number as number) ?? 0) + 1;
@@ -191,7 +191,7 @@ export async function POST(
           slug: refSlug,
           title: refTitle,
           market: thread.market,
-          source_tag: "ALH",
+          source_tag: "NEWL",
           ref_number: nextRefNumber,
         })
         .select("id")

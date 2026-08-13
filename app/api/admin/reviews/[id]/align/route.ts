@@ -131,7 +131,7 @@ export async function GET(
     }
   }
 
-  // 4. Drop the newly-created review ALH ref itself so we don't propose
+  // 4. Drop the newly-created review NEWL ref itself so we don't propose
   //    aligning it against itself.
   const createdRefId = review.created_ref_thread_id as string | null;
   const filtered = createdRefId

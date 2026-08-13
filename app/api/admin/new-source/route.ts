@@ -10,14 +10,14 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**
- * The "NEW" source pool — new processes / new policy implementations.
+ * The NEWP source pool — new processes / new policy implementations.
  *
- * POST admin+owner : create a NEW-tagged reference thread that participates
- *                    in retrieval immediately (with a small score boost).
- * GET  admin+owner : list the most recent NEW refs so admins can see what
- *                    the AI has been "learning newly".
+ * POST admin+owner : create a NEWP-tagged reference thread that participates
+ *                    in retrieval immediately (with a tier score boost).
+ * GET  admin+owner : list the most recent NEWP refs so admins can see the
+ *                    policy changes they have added.
  *
- * Each NEW entry becomes a full reference thread the same way SRC/ALH/MSTR
+ * Each NEWP entry becomes a full reference thread the same way TR1/TR2/MSTR
  * refs do, so the existing thread page (/t/[slug]) and ReferenceEditor
  * work with zero changes.
  */
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase
     .from("threads")
     .select("id, slug, title, market, ref_number, updated_at, created_at")
-    .eq("source_tag", "NEW")
+    .eq("source_tag", "NEWP")
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) return Response.json({ error: error.message }, { status: 500 });
@@ -85,11 +85,11 @@ export async function POST(request: NextRequest) {
     content,
   ].join("\n");
 
-  // Next NEW ref number. Same select-then-insert as the other seed paths.
+  // Next NEWP ref number. Same select-then-insert as the other seed paths.
   const { data: maxRows } = await supabase
     .from("threads")
     .select("ref_number")
-    .eq("source_tag", "NEW")
+    .eq("source_tag", "NEWP")
     .order("ref_number", { ascending: false })
     .limit(1);
   const nextRefNumber = ((maxRows?.[0]?.ref_number as number) ?? 0) + 1;
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
   }
 
   const slug = newSlug();
-  const threadTitle = `NEW · ${market.toUpperCase()} · ${title.slice(0, 60)}${title.length >= 60 ? "…" : ""}`;
+  const threadTitle = `NEWP · ${market.toUpperCase()} · ${title.slice(0, 60)}${title.length >= 60 ? "…" : ""}`;
 
   const { data: thread, error: threadError } = await supabase
     .from("threads")
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       slug,
       title: threadTitle,
       market,
-      source_tag: "NEW",
+      source_tag: "NEWP",
       ref_number: nextRefNumber,
     })
     .select("id")

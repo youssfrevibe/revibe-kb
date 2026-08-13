@@ -17,10 +17,10 @@ type Entry = {
 /**
  * The "What's new" panel inside the Admin Dashboard.
  *
- * Shows recently added NEW-tagged references so admins can see what
- * the AI has been learning newly. Also carries a small form to add
+ * Shows recently added NEWP-tagged references so admins can see the
+ * policy changes they have added. Also carries a small form to add
  * a new entry — title, market, content. On submit, POST to
- * /api/admin/new-source which embeds and inserts a NEW-tagged ref
+ * /api/admin/new-source which embeds and inserts a NEWP-tagged ref
  * that becomes retrievable immediately.
  */
 export function NewSourcePanel() {
@@ -72,7 +72,7 @@ export function NewSourcePanel() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Add failed");
       setOkMessage(
-        `Added NEW-${String(payload.refNumber).padStart(4, "0")} — the AI can reference it now.`,
+        `Added NEWP-${String(payload.refNumber).padStart(4, "0")} — the AI can reference it now.`,
       );
       setTitle("");
       setContent("");
@@ -194,8 +194,8 @@ export function NewSourcePanel() {
           <ul className="flex flex-col gap-2">
             {entries.map((entry) => {
               const label = entry.ref_number
-                ? `NEW-${String(entry.ref_number).padStart(4, "0")}`
-                : "NEW";
+                ? `NEWP-${String(entry.ref_number).padStart(4, "0")}`
+                : "NEWP";
               const marketShort =
                 entry.market in MARKETS
                   ? MARKETS[entry.market as keyof typeof MARKETS].short
@@ -215,7 +215,7 @@ export function NewSourcePanel() {
                         {label}
                       </span>
                       <span className="flex-1 text-[12px] font-semibold">
-                        {entry.title.replace(/^NEW · [A-Z]+ · /, "")}
+                        {entry.title.replace(/^NEWP? · [A-Z]+ · /, "")}
                       </span>
                       <span
                         className="revibe-label rounded px-1.5 py-0.5 text-[10px]"

@@ -19,7 +19,7 @@ function refLabel(source: Source): string {
 // Threads archive list shows the reference number. That prefix is now
 // redundant next to the REF badge, so strip it for display.
 function stripRefPrefix(title: string): string {
-  return title.replace(/^(?:SRC|ALH|MSTR)-\d+ · /, "");
+  return title.replace(/^(?:TR1|TR2|NEWP|NEWL|MSTR)-\d+ · /, "");
 }
 
 /**

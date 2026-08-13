@@ -170,7 +170,7 @@ export function TeachChat() {
                     >
                       <span className="font-mono font-semibold">{src.refLabel}</span>
                       <span style={{ color: "var(--revibe-ink-muted)" }}>·</span>
-                      <span className="max-w-[180px] truncate">{src.title.replace(/^(?:SRC|ALH)-\d+ · /, "")}</span>
+                      <span className="max-w-[180px] truncate">{src.title.replace(/^(?:TR1|TR2|NEWP|NEWL|MSTR)-\d+ · /, "")}</span>
                       <span
                         className="revibe-label rounded px-1 py-px text-[9px]"
                         style={{ background: "var(--revibe-canvas)", color: "var(--revibe-ink-faint)" }}
