@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { marketLabel } from "@/lib/markets";
 import { FeedbackReviewList } from "./FeedbackReviewList";
 import { NewSourcePanel } from "./NewSourcePanel";
+import { AiBrainPanel } from "./AiBrainPanel";
 import type { Role } from "@/lib/auth-shared";
 
 type DocumentRow = {
@@ -251,6 +252,17 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
             title="Add or view NEWP-tagged references — high-priority policy the AI always considers"
           >
             What&apos;s New
+          </button>
+          <button
+            onClick={() => setActiveTab("brain")}
+            className={`revibe-label px-4 py-2.5 text-[12px] border-b-2 transition-colors ${
+              activeTab === "brain"
+                ? "border-[var(--revibe-ink)] font-semibold text-[var(--revibe-ink)]"
+                : "border-transparent text-[var(--revibe-ink-muted)] hover:text-[var(--revibe-ink)]"
+            }`}
+            title="Edit the assistant's master system prompt live (Owner only)"
+          >
+            KB AI Brain
           </button>
         </div>
 
@@ -604,6 +616,8 @@ export function AdminDashboard({ documents, feedbackLogs, threads, totalVotes, i
           <NewSourcePanel />
         </div>
       )}
+
+      {activeTab === "brain" && <AiBrainPanel />}
     </div>
   );
 }

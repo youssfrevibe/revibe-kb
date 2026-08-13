@@ -3,6 +3,7 @@ import { db } from "@/lib/supabase";
 import { hybridSearch, type RetrievedRef } from "@/lib/retrieve";
 import { streamAnswer, generateText, type ChatTurn } from "@/lib/gemini";
 import { systemPrompt, buildUserMessage, rewritePrompt } from "@/lib/prompt";
+import { getActivePromptBody } from "@/lib/ai-prompt-config";
 import { detectMarkets, marketFilterFor, describeRoute } from "@/lib/market-detect";
 import { newSlug, titleFromQuestion } from "@/lib/slug";
 import { missingEnv, configErrorMessage } from "@/lib/config";
@@ -147,6 +148,10 @@ export async function POST(request: NextRequest) {
 
   await supabase.from("messages").insert({ thread_id: threadId, role: "user", content: message });
 
+  // Load the live-editable master prompt body (Admin ▸ KB AI Brain). Cached +
+  // falls back to the code default, so this never blocks the turn.
+  const promptBody = await getActivePromptBody();
+
   // ---- Stream --------------------------------------------------------------
   const turns: ChatTurn[] = [...history, { role: "user", content: buildUserMessage(message, refs) }];
 
@@ -160,7 +165,7 @@ export async function POST(request: NextRequest) {
       try {
         send(controller, { type: "meta", threadSlug: slug, title, sources, detectedMarkets });
 
-        for await (const delta of streamAnswer({ system: systemPrompt(detectedMarkets, clientDate), turns })) {
+        for await (const delta of streamAnswer({ system: systemPrompt(detectedMarkets, clientDate, promptBody), turns })) {
           answer += delta;
           send(controller, { type: "delta", text: delta });
         }
