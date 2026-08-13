@@ -181,6 +181,7 @@ export async function POST(
         .from("threads")
         .select("ref_number")
         .eq("source_tag", "NEWL")
+        .not("ref_number", "is", null)
         .order("ref_number", { ascending: false })
         .limit(1);
       const nextRefNumber = ((maxRows?.[0]?.ref_number as number) ?? 0) + 1;
