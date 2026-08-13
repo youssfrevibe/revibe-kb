@@ -254,6 +254,23 @@ export function buildUserMessage(question: string, refs: RetrievedRef[]): string
 }
 
 /**
+ * Build the user turn for whole-KB mode: the entire curated KB (plus live
+ * NEWP/NEWL overrides) is handed over as the grounding, and the assistant
+ * reasons over all of it rather than a handful of retrieved passages.
+ */
+export function buildKbMessage(question: string, kb: string): string {
+  return [
+    `Question: ${question}`,
+    "",
+    "Knowledge base — this is everything you know. Answer only from it; do not",
+    "invent anything outside it. Find the relevant scenario/policy within it and",
+    "reason over the whole picture (a case often spans several sections).",
+    "",
+    kb,
+  ].join("\n");
+}
+
+/**
  * Follow-ups like "what about annual plans?" or "and for KSA?" are meaningless
  * to a search index on their own. Rewrite them into a standalone query using
  * recent turns, so retrieval and market detection get something they can match.

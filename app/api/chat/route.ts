@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/supabase";
-import { hybridSearch, type RetrievedRef } from "@/lib/retrieve";
+import { getKbContext } from "@/lib/kb";
 import { streamAnswer, generateText, type ChatTurn } from "@/lib/gemini";
-import { systemPrompt, buildUserMessage, rewritePrompt } from "@/lib/prompt";
+import { systemPrompt, buildKbMessage, rewritePrompt } from "@/lib/prompt";
 import { getActivePromptBody } from "@/lib/ai-prompt-config";
-import { detectMarkets, marketFilterFor, describeRoute } from "@/lib/market-detect";
+import { detectMarkets, describeRoute } from "@/lib/market-detect";
 import { newSlug, titleFromQuestion } from "@/lib/slug";
 import { missingEnv, configErrorMessage } from "@/lib/config";
 import { currentUser } from "@/lib/auth";
@@ -125,26 +125,21 @@ export async function POST(request: NextRequest) {
   // Detect market(s) from the rewritten query — it carries prior turn context
   // that the raw message doesn't. This is what replaces the removed Market pill.
   const detectedMarkets = detectMarkets(searchQuery);
-  const marketFilter = marketFilterFor(detectedMarkets);
   console.log(`[chat] ${describeRoute(detectedMarkets)}`);
 
-  // ---- Retrieval -----------------------------------------------------------
-  let refs: RetrievedRef[] = [];
+  // ---- Knowledge base ------------------------------------------------------
+  // Whole-KB mode: hand the model the entire curated KB (+ live NEWP/NEWL)
+  // and let it reason over the full picture, instead of retrieving fragments.
+  let kbContext: string;
   try {
-    refs = await hybridSearch(searchQuery, marketFilter, 6);
+    kbContext = await getKbContext();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    return Response.json({ error: `Retrieval failed: ${detail}` }, { status: 500 });
+    return Response.json({ error: `KB load failed: ${detail}` }, { status: 500 });
   }
 
-  const sources: SourceOut[] = refs.map((ref, i) => ({
-    n: i + 1,
-    threadSlug: ref.threadSlug,
-    refNumber: ref.refNumber,
-    sourceTag: ref.sourceTag,
-    title: ref.title,
-    market: ref.market,
-  }));
+  // No fragment retrieval, so no per-passage sources to show.
+  const sources: SourceOut[] = [];
 
   await supabase.from("messages").insert({ thread_id: threadId, role: "user", content: message });
 
@@ -153,7 +148,7 @@ export async function POST(request: NextRequest) {
   const promptBody = await getActivePromptBody();
 
   // ---- Stream --------------------------------------------------------------
-  const turns: ChatTurn[] = [...history, { role: "user", content: buildUserMessage(message, refs) }];
+  const turns: ChatTurn[] = [...history, { role: "user", content: buildKbMessage(message, kbContext) }];
 
   const encoder = new TextEncoder();
   const send = (controller: ReadableStreamDefaultController, event: Event) =>
@@ -183,16 +178,6 @@ export async function POST(request: NextRequest) {
 
         if (saveError) {
           console.error("failed to persist answer:", saveError.message);
-        } else if (refs.length > 0) {
-          const { error: sourceError } = await supabase.from("message_sources").insert(
-            refs.map((ref, i) => ({
-              message_id: saved.id as string,
-              source_message_id: ref.messageId,
-              rank: i + 1,
-              score: ref.score,
-            })),
-          );
-          if (sourceError) console.error("failed to persist sources:", sourceError.message);
         }
 
         await supabase

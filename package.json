@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "build:kb": "tsx scripts/build-kb.ts",
+    "prebuild": "tsx scripts/build-kb.ts",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
