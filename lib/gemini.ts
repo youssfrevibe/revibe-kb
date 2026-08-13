@@ -156,7 +156,12 @@ export async function* streamAnswer(args: {
           // Near-zero: this is a policy lookup, not creative writing. Support
           // answers about SLAs and fees must be reproducible.
           temperature: 0.1,
-          maxOutputTokens: args.maxOutputTokens ?? 2048,
+          // gemini-2.5-flash "thinks" by default and those thinking tokens count
+          // against maxOutputTokens — with a modest cap the visible answer gets
+          // truncated mid-sentence. This is a grounded lookup, not a reasoning
+          // task, so disable thinking and give the answer the full budget.
+          thinkingConfig: { thinkingBudget: 0 },
+          maxOutputTokens: args.maxOutputTokens ?? 3072,
         },
       }),
     "streamAnswer",
