@@ -4,7 +4,6 @@ import { hybridSearch, type RetrievedRef } from "@/lib/retrieve";
 import { streamAnswer, generateText, type ChatTurn } from "@/lib/gemini";
 import { systemPrompt, buildUserMessage, rewritePrompt } from "@/lib/prompt";
 import { detectMarkets, marketFilterFor, describeRoute } from "@/lib/market-detect";
-import { isSourceMode, SOURCE_MODE_LABEL, type SourceMode } from "@/lib/source-tags";
 import { newSlug, titleFromQuestion } from "@/lib/slug";
 import { missingEnv, configErrorMessage } from "@/lib/config";
 import { currentUser } from "@/lib/auth";
@@ -17,7 +16,6 @@ const HISTORY_TURNS = 6;
 
 type Body = {
   message?: unknown;
-  mode?: unknown;
   threadSlug?: unknown;
   clientDate?: unknown;
 };
@@ -46,7 +44,6 @@ export async function POST(request: NextRequest) {
   }
 
   const message = typeof body.message === "string" ? body.message.trim() : "";
-  const mode: SourceMode = isSourceMode(body.mode) ? body.mode : "SRC+ALH";
   const threadSlug = typeof body.threadSlug === "string" ? body.threadSlug : null;
   const clientDate = typeof body.clientDate === "string" ? body.clientDate.trim() : "";
 
@@ -133,7 +130,7 @@ export async function POST(request: NextRequest) {
   // ---- Retrieval -----------------------------------------------------------
   let refs: RetrievedRef[] = [];
   try {
-    refs = await hybridSearch(searchQuery, marketFilter, mode, 6);
+    refs = await hybridSearch(searchQuery, marketFilter, 6);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return Response.json({ error: `Retrieval failed: ${detail}` }, { status: 500 });
@@ -217,7 +214,6 @@ export async function POST(request: NextRequest) {
       "Content-Type": "application/x-ndjson; charset=utf-8",
       "Cache-Control": "no-store",
       "X-Detected-Markets": detectedMarkets.join(",") || "none",
-      "X-Source-Mode": SOURCE_MODE_LABEL[mode],
     },
   });
 }

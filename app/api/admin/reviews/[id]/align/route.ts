@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 // The alignment tool sits behind Approve/Correct in the feedback review flow.
-// Once a reviewed correction is live as a new ALH ref, the OTHER references
+// Once a reviewed correction is live as a NEWL ref, the OTHER references
 // that still hold the stale wording show up here so the admin can rewrite
 // them in one go instead of the KB carrying two conflicting truths on the
 // same topic.
@@ -83,7 +83,7 @@ export async function GET(
   //    same topic anywhere; the cited set catches refs the model was
   //    actually reading when it produced the wrong answer.
   const marketFilter: string[] = [market];
-  const semanticResults = await hybridSearch(correction, marketFilter, "SRC+ALH", CANDIDATE_LIMIT);
+  const semanticResults = await hybridSearch(correction, marketFilter, CANDIDATE_LIMIT);
 
   type CitedSource = { threadSlug: string };
   const citedSourceSlugs = new Set<string>(
@@ -121,7 +121,7 @@ export async function GET(
           threadId: row.id,
           threadSlug: row.slug,
           refNumber: row.ref_number,
-          sourceTag: row.source_tag as "SRC" | "ALH" | "MSTR",
+          sourceTag: row.source_tag as "TR1" | "TR2" | "NEWP" | "NEWL" | "MSTR",
           title: row.title,
           market: row.market,
           content: message.content,

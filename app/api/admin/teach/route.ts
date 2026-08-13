@@ -33,7 +33,7 @@ const TEACH_SYSTEM_PROMPT = [
   "material and requesting edits.",
   "",
   "You will be given reference passages retrieved from the knowledge base. Each",
-  "passage has a reference label (like SRC-0448 or ALH-0033), a title, a market",
+  "passage has a reference label (like TR1-006 or TR2-015), a title, a market",
   "tag, and its full content.",
   "",
   "IMPORTANT: \"SA\" ALWAYS means Saudi Arabia (KSA), NEVER South Africa. South",
@@ -41,7 +41,7 @@ const TEACH_SYSTEM_PROMPT = [
   "",
   "When the admin asks where something is stated:",
   "1. Search through the provided passages and cite the EXACT reference label",
-  "   (e.g., ALH-0033) and quote the relevant section verbatim.",
+  "   (e.g., TR1-006, TR2-015) and quote the relevant section verbatim.",
   "2. If multiple sources mention the topic, list them all with their ref labels.",
   "3. Be specific about which passage says what — don't summarize loosely.",
   "",
@@ -52,7 +52,7 @@ const TEACH_SYSTEM_PROMPT = [
   "   change. The source references are shown above your response with edit links.",
   "",
   "Rules:",
-  "- Always cite reference labels (SRC-XXXX, ALH-XXXX) when referencing material.",
+  "- Always cite reference labels (TR1-XXXX, TR2-XXXX) when referencing material.",
   "- Quote passages exactly — do not paraphrase when discussing what a source says.",
   "- If no passage covers the topic, say so clearly.",
   "- Be concise and direct. The admin is a Revibe staff member, not a customer.",
@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
   // ---- Retrieve relevant source material ------------------------------------
   let refs: RetrievedRef[] = [];
   try {
-    // Search across all markets in SRC+ALH mode to find relevant source material
-    refs = await hybridSearch(message, [], "SRC+ALH", 10);
+    // Search across all tiers to find relevant source material
+    refs = await hybridSearch(message, [], 10);
   } catch (error) {
     console.error("Teaching search failed:", error);
   }

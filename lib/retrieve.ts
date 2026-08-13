@@ -2,17 +2,16 @@
 //
 // Every meaningful unit of source material is stored as a reference thread
 // with an embedded assistant message. This module hides that shape behind one
-// function: hybridSearch(query, markets, mode) → RetrievedRef[]. The caller
-// doesn't care whether the search hit an SRC (help center + PDF training) or
-// ALH (customer-bot guideline) reference; it just gets ranked references back.
+// function: hybridSearch(query, markets) → RetrievedRef[]. Retrieval is
+// modeless — the DB tier boosts (TR1 > NEWP > NEWL > TR2) handle priority.
+// MSTR threads are excluded at the RPC level.
 //
 // Server-side only. The CLI scripts import this directly, so it doesn't use
 // the `server-only` guard package — see the note in lib/supabase.ts.
 
 import { db } from "./supabase";
 import { embedQuery, generateText, UTILITY_MODEL } from "./gemini";
-import type { SourceTag, SourceMode } from "./source-tags";
-import { tagsForMode } from "./source-tags";
+import type { SourceTag } from "./source-tags";
 import type { MarketFilter } from "./market-detect";
 
 export type RetrievedRef = {
@@ -56,7 +55,6 @@ const CANDIDATE_COUNT = 30;
 export async function hybridSearch(
   query: string,
   markets: MarketFilter,
-  mode: SourceMode,
   k = 6,
 ): Promise<RetrievedRef[]> {
   const embedding = await embedQuery(query);
@@ -65,9 +63,9 @@ export async function hybridSearch(
     query_embedding: embedding,
     query_text: query,
     filter_markets: markets,
-    filter_source_tags: tagsForMode(mode),
+    filter_tags: [],            // no tag filter — DB tier boosts handle priority
     match_count: process.env.RERANK === "1" ? CANDIDATE_COUNT : k,
-    candidate_count: CANDIDATE_COUNT,
+    candidate_pool: CANDIDATE_COUNT,
   });
 
   if (error) throw new Error(`match_threads failed: ${error.message}`);

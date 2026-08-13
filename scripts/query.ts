@@ -10,28 +10,22 @@ import { config as loadEnv } from "dotenv";
 loadEnv({ path: ".env.local" });
 loadEnv();
 import { hybridSearch } from "../lib/retrieve";
-import { isSourceMode, type SourceMode } from "../lib/source-tags";
 import { detectMarkets, marketFilterFor, describeRoute } from "../lib/market-detect";
 
 async function main() {
   const argv = process.argv.slice(2);
   let k = 6;
-  let mode: SourceMode = "SRC+ALH";
   const words: string[] = [];
 
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === "--k") k = Number(argv[++i]) || k;
-    else if (argv[i] === "--mode") {
-      const value = argv[++i];
-      if (isSourceMode(value)) mode = value;
-    } else words.push(argv[i]);
+    else words.push(argv[i]);
   }
 
   const query = words.join(" ").trim();
 
   if (!query) {
-    console.error('Usage: npm run query -- --mode SRC "your question"');
-    console.error(`Modes: SRC, SRC+ALH`);
+    console.error('Usage: npm run query -- "your question"');
     process.exit(1);
   }
 
@@ -40,11 +34,10 @@ async function main() {
 
   console.log(`\nQuery:  ${query}`);
   console.log(`Route:  ${describeRoute(detected)}`);
-  console.log(`Mode:   ${mode}`);
   console.log(`Rerank: ${process.env.RERANK === "1" ? "on" : "off"}\n`);
 
   const started = Date.now();
-  const results = await hybridSearch(query, filter, mode, k);
+  const results = await hybridSearch(query, filter, k);
   const elapsed = Date.now() - started;
 
   if (results.length === 0) {

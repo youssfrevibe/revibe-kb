@@ -64,15 +64,12 @@ async function main() {
   for (const testCase of cases) {
     let results;
     try {
-      // Eval runs in the widest source mode so any correctly-tagged reference
-      // qualifies as a hit. Narrower modes should be tested with dedicated
-      // question sets, not the shared regression suite.
-      //
-      // The test case's declared market is passed as a filter directly instead
-      // of relying on auto-detection — that way the regression harness tests
-      // the retrieval layer even when a question doesn't happen to name its
-      // country, which is common in short prompts.
-      results = await hybridSearch(testCase.question, [testCase.market], "SRC+ALH", k);
+      // Eval runs across all tiers so any correctly-tagged reference
+      // qualifies as a hit. The test case's declared market is passed as a
+      // filter directly instead of relying on auto-detection — that way the
+      // regression harness tests retrieval even when a question doesn't name
+      // its country, which is common in short prompts.
+      results = await hybridSearch(testCase.question, [testCase.market], k);
     } catch (error) {
       console.error(`\nRetrieval threw on "${testCase.question}":`);
       console.error(error instanceof Error ? error.message : error);

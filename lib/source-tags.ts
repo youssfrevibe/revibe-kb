@@ -1,61 +1,46 @@
 /**
- * Which pool a document lives in for retrieval and citation display.
+ * Tier taxonomy for the Revibe KB.
  *
- * SRC   Training PDFs and the public help center (customer-facing FAQ). This is
- *       what staff quote from directly.
- * ALH   Alhena — the customer-facing AI bot's per-market guideline files. These
- *       are internal action plans and drive procedure but shouldn't be pasted
- *       verbatim to customers.
- * MSTR  The master guideline template (guidelines.md). Contains uninterpolated
- *       {{PLACEHOLDER}} tokens so it's kept out of user-facing retrieval by
- *       default.
+ * TR1   Operational ground truth extracted from the live database.
+ *       Market configs, claim workflows, shipping carriers, refund formulas,
+ *       cancellation policies. Always preferred on factual values.
+ *
+ * TR2   Reference material. Training PDFs, FAQ scenario resolutions, and
+ *       process walkthroughs. The primary answer layer — TR1 backs it up.
+ *
+ * NEWP  New policy changes taught by admins. Overrides TR1/TR2 on the specific
+ *       point it addresses. Surfaced as a mandatory alert in answers.
+ *
+ * NEWL  Newly learnt corrections from feedback validated by admins. Definitive
+ *       for the specific scenario it covers. Surfaced as a mandatory alert.
+ *
+ * MSTR  Master guideline template. Contains uninterpolated {{PLACEHOLDER}}
+ *       tokens — retrieval-excluded by default.
+ *
+ * Retrieval priority (DB boost order): TR1 > NEWP > NEWL > TR2
+ * Answer construction order:           NEWP/NEWL alert → TR2 body → TR1 backing
  */
-// NEW = the "recent policy changes / new processes" pool. Retrieval always
-// unions NEW refs in regardless of the caller's mode, and they get a small
-// score boost (see match_threads in 0010_new_source_pool.sql).
-export type SourceTag = "SRC" | "ALH" | "MSTR" | "NEW";
+export type SourceTag = "TR1" | "TR2" | "NEWP" | "NEWL" | "MSTR";
 
-export const SOURCE_TAGS: SourceTag[] = ["SRC", "ALH", "MSTR", "NEW"];
-
-/** The two retrieval modes the UI exposes. */
-export type SourceMode = "SRC" | "SRC+ALH";
-
-export const SOURCE_MODES: SourceMode[] = ["SRC", "SRC+ALH"];
-
-export function tagsForMode(mode: SourceMode): SourceTag[] {
-  return mode === "SRC" ? ["SRC"] : ["SRC", "ALH"];
-}
-
-export function isSourceMode(value: unknown): value is SourceMode {
-  return value === "SRC" || value === "SRC+ALH";
-}
-
-/** Human labels for the mode pill. */
-export const SOURCE_MODE_LABEL: Record<SourceMode, string> = {
-  SRC: "SRC only",
-  "SRC+ALH": "SRC + ALH",
-};
+export const SOURCE_TAGS: SourceTag[] = ["TR1", "TR2", "NEWP", "NEWL", "MSTR"];
 
 /**
- * Categorise a document by its type and filename. Called once at seed time to
- * decide which pool the resulting reference thread joins.
+ * Categorise a document by its path at seed time.
  *
- * The rules follow content, not extension:
- * - PDFs are training material, always SRC.
- * - The help center file is scraped public FAQ, still SRC even though it's .md.
- * - guidelines.md is the master template — MSTR, retrieval-excluded by default.
- * - Any other .md file is a compiled country guideline, ALH.
+ * Rules:
+ * - sources/tr1/**  → TR1
+ * - sources/tr2/**  → TR2  (covers both phase1 and phase2 subdirectory)
+ * - guidelines.md   → MSTR (retrieval-excluded master template)
+ * - everything else → TR2  (safe fallback for reference material)
  *
- * Returns null for anything that doesn't fit — those documents don't get
- * reference threads.
+ * Returns null for documents that should not become reference threads at all.
  */
-export function sourceTagFor(sourceType: string, sourcePath: string): SourceTag | null {
-  const filename = sourcePath.split("/").pop()?.toLowerCase() ?? "";
-
-  if (sourceType === "pdf") return "SRC";
-  if (filename.includes("help_center") || filename.includes("help-center")) return "SRC";
-  if (filename === "guidelines.md") return "MSTR";
-  if (sourceType === "md") return "ALH";
-
-  return null;
+export function sourceTagFor(filePath: string): SourceTag | null {
+  const p = filePath.replace(/\\/g, "/").toLowerCase();
+  // Paths are stored relative to sources/ so they start with "tr1/" or "tr2/".
+  // Using includes("tr1/") catches both "tr1/..." and nested ".../tr1/..." forms.
+  if (p.includes("tr1/")) return "TR1";
+  if (p.includes("tr2/")) return "TR2";
+  if (p.endsWith("guidelines.md")) return "MSTR";
+  return "TR2";
 }

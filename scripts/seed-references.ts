@@ -3,8 +3,8 @@
  *
  * Threads are the retrieval layer now (see migration 0002). Each source section
  * becomes one thread with:
- *   - source_tag: SRC (PDFs + help center) | ALH (Alhena guidelines) | MSTR (master)
- *   - ref_number: stable per-tag counter (SRC-0001..N, ALH-0001..N, MSTR-0001..N)
+ *   - source_tag: TR1 (policy index) | TR2 (training/FAQ) | NEWP | NEWL | MSTR
+ *   - ref_number: stable per-tag counter (TR1-0001..N, TR2-0001..N, etc.)
  *   - one assistant message: the section body, with a vector embedding
  *
  * Answers cite REF-#### links to the thread, and staff can edit that thread's
@@ -12,7 +12,7 @@
  * sees the updated wording, no re-ingest needed.
  *
  *   npm run seed:references                    # incremental (skips existing)
- *   npm run seed:references -- --clean         # wipe SRC/ALH/MSTR + reseed
+ *   npm run seed:references -- --clean         # wipe all ref threads + reseed
  *   npm run seed:references -- --limit 20      # smoke test
  *   npm run seed:references -- --only uae      # one market
  */
@@ -125,7 +125,7 @@ async function loadSections(
     if (!chunk.documents) continue;
     if (!isMarket(chunk.market)) continue;
 
-    const tag = sourceTagFor(chunk.documents.source_type, chunk.documents.source_path);
+    const tag = sourceTagFor(chunk.documents.source_path);
     if (!tag) continue;
 
     const key = `${chunk.document_id}::${chunk.heading_path ?? ""}`;
@@ -148,7 +148,7 @@ async function loadSections(
   }
 
   const marketOrder = new Map(MARKET_CODES.map((code, i) => [code, i] as const));
-  const tagOrder = new Map<SourceTag, number>([["SRC", 0], ["ALH", 1], ["MSTR", 2]]);
+  const tagOrder = new Map<SourceTag, number>([["TR1", 0], ["TR2", 1], ["NEWP", 2], ["NEWL", 3], ["MSTR", 4]]);
 
   const sections = [...groups.values()];
   sections.sort((a, b) => {
@@ -231,7 +231,7 @@ async function cleanExisting(supabase: DB): Promise<number> {
   const ids = ((data ?? []) as { id: string }[]).map((row) => row.id);
   if (ids.length === 0) return 0;
 
-  const yes = await confirm(`Delete ${ids.length} existing reference threads (SRC/ALH/MSTR)?`);
+  const yes = await confirm(`Delete ${ids.length} existing reference threads (TR1/TR2/NEWP/NEWL/MSTR)?`);
   if (!yes) {
     console.log("Cancelled.");
     process.exit(0);
@@ -262,10 +262,10 @@ async function main() {
 
   console.log("Loading sections…");
   const sections = await loadSections(supabase, args.only);
-  const byTag: Record<SourceTag, number> = { SRC: 0, ALH: 0, MSTR: 0, NEW: 0 };
-  for (const s of sections) byTag[s.sourceTag]++;
+  const byTag: Record<SourceTag, number> = { TR1: 0, TR2: 0, NEWP: 0, NEWL: 0, MSTR: 0 };
+  for (const s of sections) byTag[s.sourceTag]++;;
 
-  console.log(`Sections: ${sections.length} (SRC ${byTag.SRC}, ALH ${byTag.ALH}, MSTR ${byTag.MSTR})`);
+  console.log(`Sections: ${sections.length} (TR1 ${byTag.TR1}, TR2 ${byTag.TR2}, NEWP ${byTag.NEWP}, NEWL ${byTag.NEWL}, MSTR ${byTag.MSTR})`);
   if (args.only) console.log(`Filter: ${args.only} (${MARKETS[args.only].label})`);
 
   // Skip whatever already exists in this pool, keyed on (source_tag, ref_number).
@@ -286,7 +286,7 @@ async function main() {
 
   // Assign ref numbers per tag, densely 1..N. Deterministic because sections are
   // already sorted by (tag, market, doc, ord).
-  const counter: Record<SourceTag, number> = { SRC: 0, ALH: 0, MSTR: 0, NEW: 0 };
+  const counter: Record<SourceTag, number> = { TR1: 0, TR2: 0, NEWP: 0, NEWL: 0, MSTR: 0 };
   const jobs: { section: Section; refNumber: number }[] = [];
   for (const section of targets) {
     counter[section.sourceTag]++;

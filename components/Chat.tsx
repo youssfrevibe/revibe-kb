@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MARKETS, type Market } from "@/lib/markets";
-import { SOURCE_MODES, SOURCE_MODE_LABEL, type SourceMode } from "@/lib/source-tags";
 import { SourcesBlock, type Source } from "./SourcesBlock";
 
 export type ChatMessage = {
@@ -18,16 +17,13 @@ export type ChatMessage = {
 type Props = {
   initialMessages?: ChatMessage[];
   initialSlug?: string | null;
-  initialMode?: SourceMode;
 };
 
 export function Chat({
   initialMessages = [],
   initialSlug = null,
-  initialMode = "SRC+ALH",
 }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [mode, setMode] = useState<SourceMode>(initialMode);
   const [slug, setSlug] = useState<string | null>(initialSlug);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,7 +60,7 @@ export function Chat({
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: question, mode, threadSlug: slug, clientDate: clientDateStr }),
+        body: JSON.stringify({ message: question, threadSlug: slug, clientDate: clientDateStr }),
       });
 
       if (!response.ok || !response.body) {
@@ -188,56 +184,9 @@ export function Chat({
     }
   }
 
-  const modeLocked = messages.length > 0;
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Source pool selector. Locks once a thread has started because the
-          source mix a thread was answered under is part of the audit trail.
-          Market is not a control here — it's detected from the question text
-          on every turn, see lib/market-detect.ts. */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="revibe-label text-[10px]" style={{ color: "var(--revibe-ink-muted)" }}>
-          Sources
-        </span>
-        {modeLocked ? (
-          <span
-            className="revibe-label rounded-[var(--revibe-radius)] px-2 py-1 text-[11px]"
-            style={{ background: "var(--revibe-ink)", color: "#fff" }}
-          >
-            {SOURCE_MODE_LABEL[mode]}
-          </span>
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {SOURCE_MODES.map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setMode(m)}
-                aria-pressed={mode === m}
-                className="revibe-label revibe-focus rounded-[var(--revibe-radius)] border px-2.5 py-1 text-[11px] transition-colors"
-                style={{
-                  background: mode === m ? "var(--revibe-ink)" : "var(--revibe-surface)",
-                  color: mode === m ? "#fff" : "var(--revibe-ink)",
-                  borderColor: mode === m ? "var(--revibe-ink)" : "var(--revibe-border)",
-                }}
-                title={
-                  m === "SRC"
-                    ? "Training PDFs + public help center only"
-                    : "Training PDFs + help center + Alhena's customer-bot guidelines"
-                }
-              >
-                {SOURCE_MODE_LABEL[m]}
-              </button>
-            ))}
-          </div>
-        )}
-        <span className="ml-auto text-[10px]" style={{ color: "var(--revibe-ink-faint)" }}>
-          Market is detected from your question
-        </span>
-      </div>
 
-      {messages.length === 0 ? (
         <div
           className="rounded-[var(--revibe-radius)] border p-5"
           style={{ borderColor: "var(--revibe-border)", background: "var(--revibe-surface)" }}
@@ -251,7 +200,6 @@ export function Chat({
             quote market-specific numbers.
           </p>
         </div>
-      ) : null}
 
       <div className="flex flex-col gap-4">
         {messages.map((message, index) =>
